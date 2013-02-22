@@ -19,34 +19,27 @@ So the solution solving that is ***x²sql***, which is heavily inspired by the w
 + select, insert, update & delete queries
 + x2-helper classes
 
- <code>&lt;?php
-  print x2sql::query()-&gt;select()-&gt;from("table")-&gt;limit(100)-&gt;offset("?")-&gt;command;
+ `print x2sql::query()->select()->from("table")->limit(100)->offset("?")->command;`
 
-  // select * from table limit 100 offset ?;
+  >prints: select * from table limit 100 offset ?;
 
-  $cfg = json_decode('{
-    "select" : "*",
-    "from"   : "table",
-    "limit"  : "offset",
-    "offset" : "?"
-    }');
+ `$cfg = json_decode('{"select" : "*","from"   : "table","limit"  : "offset","offset" : "?"}');`
 
-  print x2sql::query($cfg)-&gt;command;
+ `print x2sql::query($cfg)->command;`
 
-  //select * from table limit 100 offset ?;
+ >prints: select * from table limit 100 offset ?;
 
-  print_r(x2sql::query($cfg));
+ `$xml = "<<query><select>*</select><from>table</from><limit>100</limit><offset>?</offset><query>";`
 
-  $xml = "<&lt;query&gt;&lt;select&gt;*&lt;/select&gt;&lt;from&gt;table&lt;/from&gt;&lt;limit&gt;100&lt;/limit&gt;&lt;offset&gt;?&lt;/offset&gt;&lt;query&gt;";
+ `print x2sql::query($cfg)->command;`
 
-  print x2sql::query($cfg)-&gt;command;
+ >prints: select * from table limit 100 offset ?;
 
-  //select * from table limit 100 offset ?;
 
-?></code>
 More complex structures can be easily realized.
+For more Examples and the full documentation visit:
 
-Website : [x2sql.get-resource.net](x2sql.get-resource.net).
+>##[x2sql.get-resource.net](x2sql.get-resource.net).
 
 It was important to have a script with no other dependencies than the programming-language itself and so be able to easily port it later on.
 
