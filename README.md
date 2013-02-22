@@ -19,8 +19,8 @@ So the solution solving that is ***x²sql***, which is heavily inspired by the w
 + select, insert, update & delete queries
 + x2-helper classes
 
- <code><?php
-  print x2sql::query()->select()->from("table")->limit(100)->offset("?")->command;
+ <code>&lt;?php
+  print x2sql::query()-&gt;select()-&gt;from("table")-&gt;limit(100)-&gt;offset("?")-&gt;command;
 
   // select * from table limit 100 offset ?;
 
@@ -31,15 +31,15 @@ So the solution solving that is ***x²sql***, which is heavily inspired by the w
     "offset" : "?"
     }');
 
-  print x2sql::query($cfg)->command;
+  print x2sql::query($cfg)-&gt;command;
 
   //select * from table limit 100 offset ?;
 
   print_r(x2sql::query($cfg));
 
-  $xml = "<query><select>*</select><from>table</from><limit>100</limit><offset>?</offset>";
+  $xml = "<&lt;query&gt;&lt;select&gt;*&lt;/select&gt;&lt;from&gt;table&lt;/from&gt;&lt;limit&gt;100&lt;/limit&gt;&lt;offset&gt;?&lt;/offset&gt;&lt;query&gt;";
 
-  print x2sql::query($cfg)->command;
+  print x2sql::query($cfg)-&gt;command;
 
   //select * from table limit 100 offset ?;
 
