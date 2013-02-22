@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100%"
+   height="100%"
+   viewBox="0 0 210 298"
+   preserveAspectRatio="xMinYMin slice"
+   id="svg2985"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="x2sql.svg">
+  <metadata
+     id="metadata2998">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs2996">
+    <linearGradient
+       id="linearGradient3008">
+      <stop
+         style="stop-color:#0051b5;stop-opacity:1;"
+         offset="0"
+         id="stop3010" />
+      <stop
+         id="stop3784"
+         offset="0.60000002"
+         style="stop-color:#addfdb;stop-opacity:0.78823531;" />
+      <stop
+         style="stop-color:#818400;stop-opacity:0.57528955;"
+         offset="1"
+         id="stop3012" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3008"
+       id="linearGradient3014"
+       x1="67.647751"
+       y1="14.579256"
+       x2="67.064583"
+       y2="4.6653619"
+       gradientUnits="userSpaceOnUse" />
+    <filter
+       id="filter3798"
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow">
+      <feFlood
+         id="feFlood3800"
+         flood-opacity="0.5"
+         flood-color="rgb(0,0,0)"
+         result="flood" />
+      <feComposite
+         id="feComposite3802"
+         in2="SourceGraphic"
+         in="flood"
+         operator="in"
+         result="composite1" />
+      <feGaussianBlur
+         id="feGaussianBlur3804"
+         in="composite"
+         stdDeviation="2"
+         result="blur" />
+      <feOffset
+         id="feOffset3806"
+         dx="7.4"
+         dy="11"
+         result="offset" />
+      <feComposite
+         id="feComposite3808"
+         in2="offset"
+         in="SourceGraphic"
+         operator="over"
+         result="composite2" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1280"
+     inkscape:window-height="736"
+     id="namedview2994"
+     showgrid="false"
+     inkscape:zoom="0.85738255"
+     inkscape:cx="98.964586"
+     inkscape:cy="246.96118"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="line1" />
+  <g
+     id="page1"
+     style="fill-opacity:1;fill:url(#linearGradient3014)">
+    <g
+       id="rect1"
+       place="1"
+       transform="matrix(1 0 0 1 36.82 26.49)"
+       style="fill-opacity:1;fill:url(#linearGradient3014)">
+      <rect
+         id="rectrect1"
+         x="0"
+         y="0"
+         rx="0"
+         width="0"
+         height="0"
+         fill="white"
+         stroke="black"
+         stroke-width="1"
+         pointer-events="visible"
+         cursor="move"
+         style="fill-opacity:1;fill:url(#linearGradient3014)" />
+    </g>
+    <g
+       id="line1"
+       place="2"
+       transform="matrix(1 0 0 1 30.230000000000004 28.54)"
+       style="fill-opacity:1;fill:url(#linearGradient3014)">
+      <path
+         id="linerect1"
+         d="M 0,0 -11.59,5.23 0.68,22.5 -17.05,41.82 2.72,41.13 8.86,25 l 7.73,16.13 20.22,0 L 16.13,23.41 27.72,5.91 28.63,10 47.04,9.77 41.36,15.45 61.58,22.5 45.9,32.27 41.58,24.77 34.08,31.36 45.22,40 71.36,26.82 83.4,38.41 97.72,31.36 77.95,69.77 90.165127,61.508787 101.81,31.82 l 5.68,9.54 18.86,0.46 -1.36,-10.46 -14.33182,2.73 11.60182,-47.5 -6.82,1.976545 L 104.31,28.63 98.17,-0.68 75.388676,18.567349 80.657378,23.299713 93.85,10.68 97.49,24.09 85.67,29.09 74.466545,19.647091 70.9,23.63 l -3.41,-6.36 -12.5,-3.86 10.46,-10 4.31,7.5 7.96,-5 L 68.63,-5.46 49.08,6.14 47.331644,2.6596085 34.793483,2.3680233 47.914814,-7.2542859 C 45.13109,-20.659239 38.242394,-20.723029 29.253366,-13.960744 l -6.123288,7.8727986 c 6.180174,-1.4569039 14.925833,-4.7462966 10.78865,1.1663406 L 27.503855,1.7848531 17.589961,-0.83941306 9.7171624,17.238865 z"
+         pointer-events="visible"
+         cursor="move"
+         inkscape:connector-curvature="0"
+         style="fill:url(#linearGradient3014);fill-opacity:1;stroke:#000000;stroke-width:1;filter:url(#filter3798)"
+         sodipodi:nodetypes="cccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+         inkscape:export-filename="/data/Maschinen/Port/80/x2sql/x2sql.png"
+         inkscape:export-xdpi="71"
+         inkscape:export-ydpi="71" />
+    </g>
+  </g>
+</svg>
