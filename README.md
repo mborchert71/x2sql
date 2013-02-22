@@ -19,7 +19,7 @@ So the solution solving that is ***x²sql***, which is heavily inspired by the w
 + select, insert, update & delete queries
 + x2-helper classes
 
- `<?php
+ <code><?php
   print x2sql::query()->select()->from("table")->limit(100)->offset("?")->command;
 
   // select * from table limit 100 offset ?;
@@ -43,7 +43,7 @@ So the solution solving that is ***x²sql***, which is heavily inspired by the w
 
   //select * from table limit 100 offset ?;
 
-?>`
+?></code>
 More complex structures can be easily realized.
 
 Website : [x2sql.get-resource.net](x2sql.get-resource.net).
