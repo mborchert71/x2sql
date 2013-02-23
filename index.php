@@ -1,4 +1,4 @@
-<img src="x2sql.png"/>
+<img src="x²sql.png"/>
 <p>Code Or Configuration To Structured Query Language</p>
 <ul>
     <li><a href="doc">documentation</a></li>
