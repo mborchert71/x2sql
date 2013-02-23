@@ -1,4 +1,4 @@
-<?php namespace testunits;
+<?php
 /**
  * _x²sql
  *
