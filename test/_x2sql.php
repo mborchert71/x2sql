@@ -1,55 +1,73 @@
 <?php 
 /**
- * _x2sql
+ * _x²sql
  *
   * The test drive for an open source SQL-generator-class
  * Using the http://simpletest.org/ test-engine.
  * 
- * @package		x2sql
+ * @package		x²sql
  * @author		m.borchert
  * @copyright           Copyright (c) 2013
  * @license		http://creativecommons.org/licenses/by/3.0/deed.de
- * @link		http://get-resource.net/app/php/x2sql
+ * @link		http://get-resource.net/app/php/x²sql
  * @since		Version 1.0
  */
- class _x2sql extends UnitTestCase {
+ 
+$option = new stdClass;
+$option->complete = false;
+$option->call = array(
+	13
+		);
+ 
+include_once '../x²sql.php';
+class _x²sql extends UnitTestCase {
 
-/**
-  simpletest-engine's asserts
-  assertTrue($x)                      Fail unless $x evaluates true
-  assertFalse($x)                     Fail unless $x evaluates false
-  assertNull($x)                      Fail unless $x is not set
-  assertNotNull($x)                   Fail unless $x is set to something
-  assertIsA($x, $t)                   Fail unless $x is the class or type $t
-  assertNotA($x, $t)                  Fail unless $x is not the class or type $t
-  assertEqual($x, $y)                 Fail unless $x == $y is true
-  assertNotEqual($x, $y)              Fail unless $x == $y is false
-  assertWithinMargin($x, $y, $margin) Fail unless $x and $y are separated less than $margin
-  assertOutsideMargin($x, $y, $margin)Fail unless $x and $y are sufficiently different
-  assertIdentical($x, $y)             Fail unless $x === $y for variables, $x == $y for objects of the same type
-  assertNotIdentical($x, $y)          Fail unless $x === $y is false, or two objects are unequal or different types
-  assertReference($x, $y)             Fail unless $x and $y are the same variable
-  assertCopy($x, $y)                  Fail unless $x and $y are the different in any way
-  assertSame($x, $y)                  Fail unless $x and $y are the same objects
-  assertClone($x, $y)                 Fail unless $x and $y are identical, but separate objects
-  assertPattern($p, $x)               Fail unless the regex $p matches $x
-  assertNoPattern($p, $x)             Fail if the regex $p matches $x
-  expectError($e)                     Triggers a fail if this error does not happen before the end of the test
-  expectException($e)                 Triggers a fail if this exception is not thrown before the end of the test
- * 
- */
-
+	public $test;
+    public $stack=array();
+	public $call=array();
+	public $complete;
     /**
      * 
      */
-    function __construct() {
+    function __construct(x²sql $x=null) {
         parent::__construct();
+		$this->test = $x = new x²sql;
+		$this->complete = true;
+		$this->stack[0]="test_Sql";
+		$this->stack[1]="test___construct";
+		$this->stack[2]="test_query";
+		$this->stack[3]="test_escape";
+		$this->stack[4]="test_select";
+		$this->stack[5]="test_from";
+		$this->stack[6]="test_where";
+		$this->stack[7]="test_having";
+		$this->stack[8]="test_group";
+		$this->stack[9]="test_order";
+		$this->stack[10]="test_limit";
+		$this->stack[11]="test_offset";
+		$this->stack[12]="test_insert";
+		$this->stack[13]="test_columns";
+		$this->stack[14]="test_values";
+		$this->stack[15]="test_update";
+		$this->stack[16]="test_set";
+		$this->stack[17]="test_delete";
+		$this->stack[18]="test_fetch";
+		$this->stack[19]="test_fetch_type";
+		$this->stack[20]="test_alias";
+		$this->stack[21]="test_name";
+		$this->stack[22]="test_comment";
     }
     /**
      * SimpleTest builtin
      */
     function setUp() {
-       ; 
+	   global $option;
+       if(isset($option->complete)) $this->complete = $option->complete;
+	   if(isset($option->call) && is_array($option->call)){
+		foreach($option->call as $call){
+			$this->setTest($call);
+			}   
+		}
     }
     /**
      * SimpletTest builtin
@@ -57,371 +75,271 @@
     function tearDown() {
        ; 
     }
+	/**
+	 * filter calling test
+	 * @param type $func
+	 * @return boolean
+	 */
+	function runTest($func){
+		if(!in_array($func, $this->call) && !$this->complete) return false;
+		return true;
+	}
+	/**
+	 * push test to call-stack
+	 * @param type $test
+	 */
+	function setTest($test){
+		$test = (is_numeric($test)&& $test<count($this->stack)) 
+			? $this->stack[$test] 
+			: (in_array($test,$this->stack) ? $test : "");
+		if(!in_array($test,$this->call)) array_push($this->call,$test);
+	}
 
 	/**
 	* test method Sql
 	*/
 	function test_Sql() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method __construct
 	*/
 	function test___construct() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method query
 	*/
 	function test_query() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method escape
 	*/
 	function test_escape() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method select
 	*/
 	function test_select() {
-		;
+		if(!$this->runTest(__FUNCTION__))return;
+		
+		$k = x²sql::esc_key;
+		$s = x²sql::esc_string;
+		$n = x²sql::esc_num;
+		$c = x²sql::esc_non;
+		$in = array(
+			null, "",
+			true, false,
+			234, 4e-1, 0x44,
+			456.325, "col",
+			"?", ":tok",
+			array("id", "name", "value"),
+			new x²bool(true),
+			new x²keyword("id"),
+			new x²number(12),
+			x²sql::query()->select(1)->alias("t"),
+			new x²string("string"),
+			new x²token("tok"),
+			new x²function("count", 0)
+		);
+		$out = array(
+			"select * ", "select * ",
+			"select 1", "select 0",
+			"select 234", "select 0.4", "select 68",
+			"select 456.325", "select  col ",
+			"select ?", "select :tok",
+			"select  id , name , value  ",
+			"select 1 ",
+			"select  id  ",
+			"select 12 ",
+			"select (select 1) t ",
+			"select 'string' ", //\salias\s
+			"select " . x²sql::tokenizer . "tok ", //\salias\s
+			"select count( 0 )"
+		);
+		$inst = $this->test->select($in[0]);
+		$this->assertEqual($this->test, $inst);
+		$this->assertEqual($this->test->command_type, "select");
+		$this->assertEqual(count($in), count($out));
+		$c = count($in);
+		while ($c--) {
+			$inst = $this->test->select($in[$c]);
+			$this->assertEqual($out[$c], $this->test->last_append);
+		}
 	}
 	/**
 	* test method from
 	*/
 	function test_from() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method where
 	*/
 	function test_where() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method having
 	*/
 	function test_having() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method group
 	*/
 	function test_group() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method order
 	*/
 	function test_order() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method limit
 	*/
 	function test_limit() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method offset
 	*/
 	function test_offset() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method insert
 	*/
 	function test_insert() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method columns
 	*/
 	function test_columns() {
-		;
+		if(!$this->runTest(__FUNCTION__))return;
+
+		$k = x²sql::esc_key;
+		$in = array(
+			"col",
+			"?", ":tok",
+			array("id", "name", "value"),
+			new x²place("","alias"),
+			new x²key("id"),
+			new x²string("id")
+		);
+		$out = array(
+			"( col )",
+			"(?)", "(:tok)",
+			"( id , name , value )",
+			"(?)",
+			"( id )",
+			"( id )"
+		);
+		//expect pass
+		$this->assertEqual(count($in), count($out));
+		$c = count($in);
+		while ($c--) {
+			$inst = $this->test->columns($in[$c]);
+			$this->assertEqual($out[$c], $this->test->last_append);
+		}
+		//expect fail
+		$in = array(
+			null, "",
+			true, false,
+			234, 4e-1, 0x44,
+			456.325,
+			new x²bool(true),
+			new x²number(12)
+		);
+		$c = count($in);
+		while ($c--) {
+			$e = null;
+			try{
+				$inst = $this->test->columns($in[$c]);
+			}
+			catch(Exception $e){
+			}
+			$this->assertIsA($e, "Exception","input:$c");
+		}		
 	}
 	/**
 	* test method values
 	*/
 	function test_values() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method update
 	*/
 	function test_update() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method set
 	*/
 	function test_set() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method delete
 	*/
 	function test_delete() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method fetch
 	*/
 	function test_fetch() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method fetch_type
 	*/
 	function test_fetch_type() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method alias
 	*/
 	function test_alias() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method name
 	*/
 	function test_name() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}
 	/**
 	* test method comment
 	*/
 	function test_comment() {
+		if(!$this->runTest(__FUNCTION__))return;
 		;
 	}}
 //eof
-?><pre><?php
-
-	include_once '../x2sql.php';
-
-	/**
-	 * 1 Json2SQL
-	 * 2 SerializedPHP  2SQL
-	 * 4 Obj 2SQL
-	 * 8 PHP 2SQL
-	 * 16 XML 2SQL
-	 */
-	$print = 8;
-	$queries = json_decode('{
-        "insert" :{
-            "insert":["node"],
-            "columns":["id","text","no"],
-            "values":[null,"?",13]
-        },
-        "select" :{ 
-            "select":[{"type":"query","select":["1"],"from":"dual","alias":"const"},{"type":"string","value":"id"},"protocol||\'://\'||domain||path||name as url","state"],
-            "from":["node"],
-            "group":["domain||path"],
-            "limit":"?",
-            "offset":"?",
-            "fetch_type":2
-            }
-        ,
-        "update" :{   
-            "update":["node"],
-            "set":{"state":"?"},
-            "where":[{"bind":"Column","key":"id"},"=","?"],
-            "limit":100,
-            "offset":0
-            }
-        }');
-	$queries2 = array(
-		array(
-			"name" => "insert-node",
-			"insert" => array("node"),
-			"columns" => array("id", "text", "no"),
-			"values" => array(null, "?", 13)
-		),
-		array(
-			"name" => "select-node",
-			"select" => array("id", "protocol||\'://\'||domain||path||name as url", "state"),
-			"from" => array("node"),
-			"group" => array("domain||path"),
-			"limit" => "?",
-			"offset" => "?",
-			"fetch_type" => 2
-		)
-		,
-		array(
-			"name" => "update-node",
-			"update" => ["node"],
-			"set" => array("state" => "?"),
-			"where" => array(array("bind" => "Column", "key" => "id"), "=", "?"),
-			"limit" => 100,
-			"offset" => 0
-		)
-	);
-	if ($print & 1) {
-		print "Json-SQL Config\n";
-
-		$cmd = new stdClass;
-		$cmd->insert = new x2sql($queries->insert);
-		$cmd->select = new x2sql($queries->select);
-		$cmd->update = new x2sql($queries->update);
-
-		print_r($cmd->insert);
-		print_r($cmd->select);
-		print_r($cmd->update);
-	}
-	if ($print & 2) {
-		print "Serialized Config\n";
-		$ser_queries = serialize($queries);
-		$uns_queries = unserialize($ser_queries);
-
-		$cmd->select = new x2sql($queries->select);
-		$cmd->update = new x2sql($queries->update);
-
-		print_r($cmd->select);
-		print_r($cmd->update);
-	}
-	if ($print & 4) {
-		print "Serialized Object\n";
-
-		$cmd->select = new x2sql($queries->select);
-		$cmd->update = new x2sql($queries->update);
-
-		$ser_queries = serialize($cmd);
-		$cmd_wakeup = unserialize($ser_queries);
-
-		print_r($cmd_wakeup->select);
-		print_r($cmd_wakeup->update);
-	}
-	if ($print & 8) {
-
-		print "PHP-SQL Code\n";
-
-		$cmd = x2sql::query()
-				->select(array(
-					new x2func("count", array(1, new x2func("meas")), "count")
-					,
-					new x2bool("true", "really")
-				))
-				->from(array("this",
-					x2sql::query()->select()
-					->from("dingens")
-					->where(array(new x2func("avg", "?"), "<", 3))
-					->group("col1")
-					->alias("supi")
-				))
-				->where(array(array(7, "between", 3, "and", 10), "and", array(new x2func("count", ":tremolo"), " <= ", "null")));
-
-		print_r($cmd);
-
-		print x2sql::query()
-						->select()
-						->from("table")
-						->where(array(
-							x2sql::query()->select("id")->from("table")->where(array(new x2keyword("name"), "=", "herbert")),
-							"=",
-							234
-						))->command;
-	}
-	if ($print & 16) {
-
-		/**
-		 * basic class for converting an array to xml.
-		 * @author Matt Wiseman (trollboy at shoggoth.net)
-		 *
-		 */
-		class array2xml {
-
-			public $data;
-			public $dom_tree;
-			public $item_tag = "o";
-			public $document_tag = "queries";
-
-			/**
-			 * basic constructor
-			 *
-			 * @param array $array
-			 */
-			public function __construct($array) {
-				if (!is_array($array)) {
-					throw new Exception('array2xml requires an array', 1);
-					unset($this);
-				}
-				if (!count($array)) {
-					throw new Exception('array is empty', 2);
-					unset($this);
-				}
-
-				$this->data = new DOMDocument('1.0');
-
-				$this->dom_tree = $this->data->createElement($this->document_tag);
-				$this->data->appendChild($this->dom_tree);
-				$this->recurse_node($array, $this->dom_tree);
-			}
-
-			/**
-			 * recurse a nested array and return dom back
-			 *
-			 * @param array $data
-			 * @param dom element $obj
-			 */
-			private function recurse_node($data, $obj) {
-				$i = 0;
-				foreach ($data as $key => $value) {
-					$key = is_numeric($key) ? $this->item_tag : $key;
-					if (is_array($value)) {
-						//recurse if neccisary
-						$sub_obj[$i] = $this->data->createElement($key);
-						$obj->appendChild($sub_obj[$i]);
-						$this->recurse_node($value, $sub_obj[$i]);
-					} elseif (is_object($value)) {
-						//no object support so just say what it is
-						$sub_obj[$i] = $this->data->createElement($key, 'Object: "' . $key . '" type: "' . get_class($value) . '"');
-						$obj->appendChild($sub_obj[$i]);
-					} else {
-						//straight up data, no weirdness
-						$sub_obj[$i] = $this->data->createElement($key, $value);
-						$obj->appendChild($sub_obj[$i]);
-					}
-					$i++;
-				}
-			}
-
-			/**
-			 * get the finished xml
-			 *
-			 * @return string
-			 */
-			public function saveXML() {
-				return $this->data->saveXML();
-			}
-
-		}
-
-		try {
-			$_ = new array2xml($queries2);
-			print $_->saveXML();
-		} catch (Exception $e) {
-			print_r($e);
-		}
-	}
-
-	$xmlstr = <<<XML
-<query>
-        <select>id</select>
-        <select>name</select>
-        <select>type</select>
-        <from>table</from>
-        <limit><x2func><name>round</name><value>100.3</value></x2func></limit>
-        <offset>?</offset>
-</query>
-XML;
-
-	$xml = new SimpleXMLElement($xmlstr);
-	print "<hr>";
-	print_r($xml);
-	echo $xml->select;
-	echo $xml->{'from'};
-
-	x2sql::query($xml)->command;
-
