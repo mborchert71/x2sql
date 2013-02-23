@@ -16,7 +16,7 @@
 $option = new stdClass;
 $option->complete = false;
 $option->call = array(
-	13
+	4,13
 		);
  
 include_once '../x²sql.php';
@@ -141,12 +141,12 @@ class _x²sql extends UnitTestCase {
 			"?", ":tok",
 			array("id", "name", "value"),
 			new x²bool(true),
-			new x²keyword("id"),
+			new x²key("id"),
 			new x²number(12),
 			x²sql::query()->select(1)->alias("t"),
 			new x²string("string"),
 			new x²token("tok"),
-			new x²function("count", 0)
+			new x²func("count", 0)
 		);
 		$out = array(
 			"select * ", "select * ",

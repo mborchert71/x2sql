@@ -285,12 +285,12 @@ class x²sql {
 		//x² helpers
 		if (is_string($set) && ( $set == self::placerholder || substr($set, 0, 1) == self::tokenizer)) {
 			$this->prepare = true;
-			if (preg_match("/\s/", $str))
+			if (preg_match("/\s/", $set))
 				throw new Exception(__CLASS__ . "->escape prepare-token must not have space");
 			$counter = $this->bind_count++;
 			$this->bind->$counter = new stdClass();
 			$this->bind->$counter->bind = "Param";
-			$this->bind->$counter->key = $str;
+			$this->bind->$counter->key = $set;
 			$this->bind->$counter->type = PDO::PARAM_STR;
 			$this->bind->$counter->value = self::null_string;
 		}
@@ -300,7 +300,7 @@ class x²sql {
 		} else if (is_a($set, "x²number")) {
 			$set = $set->value . " "
 					. self::escape($set->alias, self::esc_key);
-		} else if (is_a($set, "x²keyword")) {
+		} else if (is_a($set, "x²key")) {
 			$set = self::escape($set->value, self::esc_key) . " "
 					. self::escape($set->alias, self::esc_key);
 		} else if (is_a($set, "x²string")) {
@@ -332,11 +332,9 @@ class x²sql {
 					self::escape($set->alias, self::esc_key);
 		} else if (is_object($set)) {
 			switch (@$set->type) {
-				case "null" :case "bool" :case "number" :case "string" :case "key" :case "keyword" :
+				case "null" :case "bool" :case "number" :case "string" :case "key" :case "token" :
 					$x²class = "x²" . $set->type;
 					$set = $this->implode(new $x²class($set->value, @$set->alias));
-					break;
-				case "token": $set = $this->implode(new x²token($set->value, @$set->alias, @$set->options));
 					break;
 				case "func": $set = $this->implode(new x²func($set->name, @$set->argus, @$set->alias));
 					break;
