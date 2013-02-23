@@ -133,12 +133,13 @@ class _x²sql extends UnitTestCase {
 		$s = x²sql::esc_string;
 		$n = x²sql::esc_num;
 		$c = x²sql::esc_non;
+		$t = x²sql::tokenizer;
 		$in = array(
 			null, "",
 			true, false,
 			234, 4e-1, 0x44,
 			456.325, "col",
-			"?", ":tok",
+			"?", "{$t}tok",
 			array("id", "name", "value"),
 			new x²bool(true),
 			new x²key("id"),
@@ -152,15 +153,15 @@ class _x²sql extends UnitTestCase {
 			"select * ", "select * ",
 			"select 1", "select 0",
 			"select 234", "select 0.4", "select 68",
-			"select 456.325", "select  col ",
-			"select ?", "select :tok",
-			"select  id , name , value  ",
+			"select 456.325", "select {$k}col{$k}",
+			"select ?", "select {$t}tok",
+			"select {$k}id{$k},{$k}name{$k},{$k}value{$k} ",
 			"select 1 ",
-			"select  id  ",
+			"select {$k}id{$k} ",
 			"select 12 ",
-			"select (select 1) t ",
-			"select 'string' ", //\salias\s
-			"select " . x²sql::tokenizer . "tok ", //\salias\s
+			"select (select 1){$k}t{$k}",
+			"select {$s}string{$s} ",
+			"select {$t}tok ",
 			"select count( 0 )"
 		);
 		$inst = $this->test->select($in[0]);
@@ -240,17 +241,17 @@ class _x²sql extends UnitTestCase {
 			"col",
 			"?", ":tok",
 			array("id", "name", "value"),
-			new x²place("","alias"),
-			new x²key("id"),
-			new x²string("id")
+			new x²place("","no-alias-must-be-set"),
+			new x²key("id","no-alias-must-be-set"),
+			new x²string("id","no-alias-must-be-set")
 		);
 		$out = array(
-			"( col )",
+			"({$k}col{$k})",
 			"(?)", "(:tok)",
-			"( id , name , value )",
+			"({$k}id{$k},{$k}name{$k},{$k}value{$k})",
 			"(?)",
-			"( id )",
-			"( id )"
+			"({$k}id{$k})",
+			"({$k}id{$k})"
 		);
 		//expect pass
 		$this->assertEqual(count($in), count($out));
@@ -266,7 +267,8 @@ class _x²sql extends UnitTestCase {
 			234, 4e-1, 0x44,
 			456.325,
 			new x²bool(true),
-			new x²number(12)
+			new x²number(12),
+			new stdClass()
 		);
 		$c = count($in);
 		while ($c--) {

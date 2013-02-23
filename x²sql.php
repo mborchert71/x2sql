@@ -40,23 +40,23 @@ class x²sql {
 	 */
 	const placerholder = "?";
 	/**
-	 * Most likely to become a Configparam in the near future
+	 *
 	 */
 	const esc_string = "'";
 	/**
-	 * Most likely to become a Configparam in the near future
+	 *
 	 */
-	const esc_key = " ";
+	const esc_key = "`";
 	/**
-	 * Most likely to become a Configparam in the near future
+	 *
 	 */
 	const esc_non = " ";
 	/**
-	 * Most likely to become a Configparam in the near future
+	 *
 	 */
 	const esc_num = " ";
 	/**
-	 * Most likely to become a Configparam in the near future
+	 *
 	 */
 	const null_string = "null";
 	/**
