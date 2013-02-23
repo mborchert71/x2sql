@@ -273,7 +273,7 @@ class x2sql {
             } else if (is_a($val, "x2sql")) {
                 if (!$val->alias)
                     throw new Exception(__CLASS__
-                            . "->implode: nested selects need alias");
+                    . "->implode: nested selects need alias");
                 $set[$key] = "(" . $val->command . ")"
                         . $this->escape($val->alias, self::ESC_KEY);
                 if ($val->prepare) {
@@ -341,8 +341,8 @@ class x2sql {
      */
     private function combine(&$set) {
         $str = "";
-        if (is_a($set,"x2bool")|| is_a($set,"x2string") || is_a($set,"x2keyword")|| is_a($set,"x2number") || is_a($set,"x2null"))
-                return $this->implode(array($set));
+        if (is_a($set, "x2bool") || is_a($set, "x2string") || is_a($set, "x2keyword") || is_a($set, "x2number") || is_a($set, "x2null"))
+            return $this->implode(array($set));
         if (is_a($set, "x2sql")) {
             if ($set->prepare) {
                 $this->prepare = true;
