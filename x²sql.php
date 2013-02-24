@@ -50,11 +50,11 @@ class x²sql {
 	/**
 	 *
 	 */
-	const esc_non = " ";
+	const esc_non = "";
 	/**
 	 *
 	 */
-	const esc_num = " ";
+	const esc_num = "";
 	/**
 	 *
 	 */
@@ -63,6 +63,10 @@ class x²sql {
 	 * Operators Regular Expression, to savely not! string-escape these
 	 */
 	const regex_operators = "/^(:=|\|\||OR|XOR|&&|AND|NOT|BETWEEN|CASE|WHEN|THEN|ELSE|=|<=>|>=|<=|<|<>|>|!=|IS|LIKE|REGEXP|IN|\||&|<<|>>|-|\+|\*|\/|DIV|%|MOD|^|~|!|BINARY|COLLATE)$/i";
+	/**
+	 * 
+	 */
+	const x²null = "x²null";
 	/**
 	 * 
 	 */
@@ -384,7 +388,7 @@ class x²sql {
 			$this->bind->$counter->value = self::null_string;
 			return $set;
 		}
-		if (is_a($set, "x²bool") || is_a($set, "x²string") || is_a($set, "x²keyword") || is_a($set, "x²number") || is_a($set, "x²null"))
+		if (is_a($set, "x²bool") || is_a($set, "x²string") || is_a($set, "x²key") || is_a($set, "x²number") || is_a($set, "x²null"))
 			return $this->implode(array($set));
 		if (is_a($set, "x²sql")) {
 			if ($set->prepare) {
@@ -450,7 +454,7 @@ class x²sql {
 					break;
 				case "query": return $this->implode(array(new x²sql($val)));
 					break;
-				default : print_r($val);
+				default :
 					throw
 					new Exception(__CLASS__ . "->implode unkown type");
 
@@ -472,27 +476,26 @@ class x²sql {
 	 *
 	 * @access public
 	 */
-	static public function escape($str, $esc) {
+	static public function escape($str, $esc=self::esc_string) {
 		$str = trim($str);
 		$char = substr($str, 0, 1);
 		if (is_bool($str))
-			return $str ? "1" : "0";
-		if ($str == self::placerholder)
+			return $str ? $esc."1".$esc : $esc."0".$esc;
+		elseif ($str === self::placerholder)
 			return $str;
-		if (substr($str, 0, 1) != self::tokenizer) {
+		elseif ($str === self::null_string || $str === null) {
+			return self::null_string;
+		}
+		elseif (is_numeric($str)) {
+			return $esc . $str . $esc;
+		}
+		elseif (preg_match(self::regex_operators, $str)) {
+			return $str;
+		}
+		elseif (substr($str, 0, 1) != self::tokenizer){
 
-			if ($str === self::null_string || $str === null) {
-				return self::null_string;
-			}
-			if (is_numeric($str)) {
-				return " " . $str . " ";
-			}
-			if (preg_match(self::regex_operators, $str)) {
-				return $str;
-			}
-
-			$ndl = array("/r/", "/n/", "/t/");
-			$rep = array("r", "n", "t");
+			$ndl = array("/\\r/", "/\\n/", "/\\t/");
+			$rep = array("\\r", "\\n", "\\t");
 
 			if (trim($esc)) {
 				$ndl[] = "/" . $esc . "/";
@@ -529,7 +532,10 @@ class x²sql {
 			$set = array("*");
 		if (!$this->command_type)
 			$this->command_type = __FUNCTION__;
-		$this->command.= $this->last_append = __FUNCTION__ . " " . $this->implode($set);
+		$cfg = new stdClass;
+		$cfg->no_brackets = true;
+		$cfg->cast = "x²key";
+		$this->command.= $this->last_append = __FUNCTION__ . " " . $this->complode($set,$cfg);
 		return $this;
 	}
 
@@ -545,7 +551,11 @@ class x²sql {
 	 * @access public
 	 */
 	public function from($set) {
-		$this->command.= __FUNCTION__ . " " . $this->implode($set);
+		$cfg = new stdClass;
+		$cfg->cast = "x²key";
+		$cfg->allow=array(self::x²string,self::x²key,self::x²token,__CLASS__);
+		$cfg->no_brackets=true;
+		$this->command.= $this->last_append = " ".__FUNCTION__ . " " . $this->complode($set,$cfg);
 		return $this;
 	}
 
@@ -672,14 +682,14 @@ class x²sql {
 		return $this;
 	}
 
-	public function complode($set, $cfg) {
+	public function complode($set, $cfg=null) {
 
 		if (is_array($set)) {
 			foreach ($set as $subset)
 				$_[] = $this->complode($subset, $cfg);
-			return ((@$cfg->no_bracket) ? "" : x²sql::char_bracket_open)
+			return ((@$cfg->no_brackets) ? "" : x²sql::char_bracket_open)
 					. implode(x²sql::char_list_delimiter, $_)
-					. ((@$cfg->no_bracket) ? "" : x²sql::char_bracket_close);
+					. ((@$cfg->no_brackets) ? "" : x²sql::char_bracket_close);
 		} elseif (is_object($set)) {
 			$class = get_class($set);
 			if (isset($cfg->allow) && !in_array($class, $cfg->allow)) {
@@ -687,22 +697,39 @@ class x²sql {
 					throw new Exception("$class is not allowed");
 			}
 			switch ($class) {
-				case self::x²bool :
-				case self::x²number :
 				case self::x²place :
-				case self::x²token :
-				case self::x²string :
-				case self::x²key :
-					if($class==self::x²string && !strlen($set->value)
-					|| $class==self::x²token && 2>strlen($set->value)
-					) throw new Exception(__CLASS__."->complode emptyString not allowed");
-					if (@$cfg->escape) {
-						return x²sql::escape($set->value, $cfg->escape)
-								.(($set->alias && !@$cfg->noalias)
-								? " " . x²sql::escape($set->alias, self::esc_key) : "");
+					if (@$cfg->no_alias) {
+						return x²sql::escape($set->value, "");
 					}
 					else
 						return $set->display;
+					break;
+				case self::x²token :
+					if(2>strlen($set->value))
+						throw new Exception(__CLASS__."->complode emptyString not allowed");					
+					if (@$cfg->no_alias) {
+						return x²sql::escape(x²sql::tokenizer .$set->value, "");
+					}
+					else
+						return $set->display;
+					break;
+				case self::x²null:
+				case self::x²bool :
+				case self::x²number :
+				case self::x²string :
+				case self::x²key :
+					if($class==self::x²string && !strlen($set->value)
+					) throw new Exception(__CLASS__."->complode emptyString not allowed");
+					if (@$cfg->escape) {
+						return x²sql::escape($set->value, $cfg->escape)
+								.(!@$cfg->no_alias
+								? " " . x²sql::escape($set->alias, self::esc_key) : "");
+					}
+					elseif (@$cfg->no_alias) {
+							return x²sql::escape($set->value, $set->escape);
+					}else{
+						return $set->display;
+						}
 					break;
 				case self::x²func:
 					$str = array();
@@ -726,12 +753,13 @@ class x²sql {
 					return self::char_bracket_open
 							. $set->command
 							. self::char_bracket_close
-							. (@$cfg->alias ? " " . self::escape($set->alias, self::esc_key) : "");
+							. (@$cfg->no_alias ?"": " " . self::escape($set->alias, self::esc_key));
 				default:
 					if (!isset($set->type))
 						throw new Exception("$class::property:type does not exist");
 					//$this->stdClass2x²class
 					switch (@$set->type) {
+						case self::x²null:
 						case self::x²bool :
 						case self::x²number :
 						case self::x²place :
@@ -758,14 +786,18 @@ class x²sql {
 			if ($set == self::placerholder) {
 				return  $this->complode(new x²place($set), $cfg);
 			} elseif (substr($set, 0, 1) == self::tokenizer) {
-				return  $this->complode(new x²token($set), $cfg);
+				return  $this->complode(new x²token(substr($set,1)), $cfg);
 			} else {
-				return $this->complode(new x²string($set), $cfg);
+				$class = @$cfg->cast ? $cfg->cast : "x²string";
+				return $this->complode(new $class($set), $cfg);
 			}
 		} elseif (is_bool($set)) {
-			return  $this->complode(new x²bool($set), $cfg);
+			$set = $set ? "1" : "0";
+			$class = @$cfg->cast ? $cfg->cast : "x²bool";
+			return  $this->complode(new $class($set), $cfg);
 		} elseif (is_numeric($set)) {
-			return  $this->complode(new x²number($set), $cfg);
+			$class = @$cfg->cast ? $cfg->cast : "x²number";
+			return  $this->complode(new $class($set), $cfg);
 		}
 		throw new Exception("you should never reach this point");
 	}
@@ -804,7 +836,7 @@ class x²sql {
 		$cfg = new stdClass();
 		$cfg->escape = self::esc_key;
 		$cfg->allow = array(self::x²key, self::x²string, self::x²place, self::x²token);
-		$cfg->noalias= true;
+		$cfg->no_alias= true;
 		$this->command.= $this->last_append = $this->complode($set, $cfg);
 		return $this;
 	}
@@ -1009,7 +1041,7 @@ class x²base {
 	public $value;
 	public $alias;
 	public $display;
-
+	private $escape = x²sql::esc_string;
 	/**
 	 * 
 	 */
@@ -1030,13 +1062,14 @@ class x²base {
  * @since
  */
 class x²token extends x²base {
-
+	private $escape = x²sql::esc_non;
 	/**
 	 * 
 	 */
 	public function __construct($value, $alias = "") {
 		if (preg_match("/\s/", $value))
 			throw new Exception(__CLASS__ . "->value space is not allowed");
+		$value = (substr($value,0,1)==x²sql::tokenizer)? substr($value,1) : $value;
 		parent::__construct($value, $alias);
 		$this->display = x²sql::tokenizer . x²sql::escape($value, x²sql::esc_non)
 				. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
@@ -1073,6 +1106,7 @@ class x²string extends x²base {
  * @since
  */
 class x²key extends x²base {
+	private $escape = x²sql::esc_key;
 
 	/**
 	 * 
@@ -1096,6 +1130,7 @@ class x²key extends x²base {
  * @since
  */
 class x²bool extends x²base {
+	private $escape = x²sql::esc_non;
 
 	/**
 	 * __construct
@@ -1129,6 +1164,7 @@ class x²bool extends x²base {
  * @since
  */
 class x²number extends x²base {
+	private $escape = x²sql::esc_non;
 
 	/**
 	 * __construct
@@ -1163,6 +1199,7 @@ class x²number extends x²base {
  * @since
  */
 class x²null extends x²base {
+	private $escape = x²sql::esc_non;
 
 	/**
 	 * __construct
@@ -1191,6 +1228,7 @@ class x²null extends x²base {
  * @since
  */
 class x²place extends x²base {
+	private $escape = x²sql::esc_non;
 
 	/**
 	 * Insert description here

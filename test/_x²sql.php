@@ -18,7 +18,9 @@ $option->complete = false;
 $option->call = array(
 	4,13
 		);
- 
+if(@$_REQUEST["call"]){
+	$option->call =explode(",",$_REQUEST["call"]);
+} 
 include_once '../x²sql.php';
 class _x²sql extends UnitTestCase {
 
@@ -150,19 +152,19 @@ class _x²sql extends UnitTestCase {
 			new x²func("count", 0)
 		);
 		$out = array(
-			"select * ", "select * ",
-			"select 1", "select 0",
-			"select 234", "select 0.4", "select 68",
-			"select 456.325", "select {$k}col{$k}",
+			"select *", "select *",
+			"select {$k}1{$k}", "select {$k}0{$k}",
+			"select {$k}234{$k}", "select {$k}0.4{$k}", "select {$k}68{$k}",
+			"select {$k}456.325{$k}", "select {$k}col{$k}",
 			"select ?", "select {$t}tok",
-			"select {$k}id{$k},{$k}name{$k},{$k}value{$k} ",
-			"select 1 ",
-			"select {$k}id{$k} ",
-			"select 12 ",
-			"select (select 1){$k}t{$k}",
-			"select {$s}string{$s} ",
-			"select {$t}tok ",
-			"select count( 0 )"
+			"select {$k}id{$k},{$k}name{$k},{$k}value{$k}",
+			"select 1",
+			"select {$k}id{$k}",
+			"select 12",
+			"select (select {$k}1{$k}) {$k}t{$k}", 
+			"select {$s}string{$s}",
+			"select {$t}tok",
+			"select count(0)"
 		);
 		$inst = $this->test->select($in[0]);
 		$this->assertEqual($this->test, $inst);
@@ -171,7 +173,7 @@ class _x²sql extends UnitTestCase {
 		$c = count($in);
 		while ($c--) {
 			$inst = $this->test->select($in[$c]);
-			$this->assertEqual($out[$c], $this->test->last_append);
+			$this->assertEqual($out[$c], $this->test->last_append,"%s fail-index:$c");
 		}
 	}
 	/**
@@ -179,7 +181,58 @@ class _x²sql extends UnitTestCase {
 	*/
 	function test_from() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$k = x²sql::esc_key;
+		$t = x²sql::tokenizer;
+		$in = array(
+			true, false,
+			234, 4e-1, 0x44,
+			456.325,
+			"col",
+			":tok",
+			array("t1", "t2", "t3"),
+			new x²key("table","alias"),
+			x²sql::query()->select()->from("t")->where(array(new x²key("x"),"<","3"))->alias("alias")
+		);
+		$in[] = array($in[6],$in[9],$in[10]);
+		$out = array(
+			" from {$k}1{$k}",
+			" from {$k}0{$k}",
+			" from {$k}234{$k}",
+			" from {$k}0.4{$k}",
+			" from {$k}68{$k}",
+			" from {$k}456.325{$k}",
+			" from {$k}col{$k}",
+			" from {$t}tok",
+			" from {$k}t1{$k},{$k}t2{$k},{$k}t3{$k}",
+			" from {$k}table{$k} {$k}alias{$k}",
+			" from (select * from {$k}t{$k} where ({$k}x{$k}   <  3 ) ) {$k}alias{$k}" 
+		);
+		$out[] = " from {$k}col{$k},{$k}table{$k} {$k}alias{$k},(select * from {$k}t{$k} where ({$k}x{$k}   <  3 ) ) {$k}alias{$k}";
+		//expect pass
+		$this->assertEqual(count($in), count($out));
+		$c = count($in);
+		while ($c--) {
+			$inst = $this->test->from($in[$c]);
+			$this->assertEqual($out[$c], $this->test->last_append);
+		}
+		//expect fail
+		$in = array(
+			new x²bool(true),
+			new x²number(12),
+			new stdClass(),
+			new x²func("count","*")
+		);
+		$c = count($in);
+		while ($c--) {
+			$e = null;
+			try{
+				$inst = $this->test->from($in[$c]);
+			}
+			catch(Exception $e){
+			}
+			$this->assertIsA($e, "Exception","%s input:$c =>".$this->test->last_append);
+		}		
+
 	}
 	/**
 	* test method where
