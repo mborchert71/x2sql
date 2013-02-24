@@ -193,7 +193,33 @@ class x²sql {
 	 * @var string
 	 */
 	public $last_append;
-
+	/**
+	 * reset the object for reuse
+	 */
+	public function reset(){
+		$this->bind = new stdClass();
+		$this->bind_count =0;
+		$this->prepare = false;
+		$this->init_data=null;
+		$this->command="";
+		$this->command_type=null;
+		$this->last_append="";
+		$this->fetch = "fetchAll";
+		$this->fetch_type=PDO::FETCH_NUM;
+		$this->comment = "";
+		$this->alias="";
+		$this->name = "";
+	}
+	public function get_cfg_data(&$cfg){
+		if(is_string($cfg) && preg_match("/^[\{\(]{1,999}/",$cfg)){
+			$jcfg = json_decode($cfg);
+			if(!is_array($jcfg) && !is_object($jcfg)){
+				throw new Exception("invalid Json");
+			}
+			return $jcfg;
+		}
+		return $cfg;
+	}
 	/**
 	 * This function gives us the convenience, to throw in a Configuration Object and getting Out the SqlStatement.
 	 *
@@ -205,6 +231,7 @@ class x²sql {
 	 */
 	public function Sql(&$cfg) {
 		$this->init_data = $cfg;
+		$cfg = $this->get_cfg_data($cfg);
 		if (isset($cfg->select))
 			return $this->name(@$cfg->name)
 							->comment(@$cfg->comment)
@@ -248,6 +275,7 @@ class x²sql {
 	 */
 	public function __construct($cfg = null) {
 		$this->bind = new stdClass;
+		
 		if ($cfg) {
 			return $this->Sql($cfg);
 		}
@@ -272,200 +300,10 @@ class x²sql {
 		return new x²sql($cfg);
 	}
 
-	/**
-	 * 
-	 * Besides combine() and implode() a input iterator.
-	 * Don't know what and if there will be only one iterator.
-	 *
-	 * @param $set
-	 * @param $options
-	 *
-	 * @return str
-	 *
-	 * @access private
-	 */
-	private function implode($set) {
-		//scalar
-		//object stdClass from Json by type
-		//x² helpers
-		if (is_string($set) && ( $set == self::placerholder || substr($set, 0, 1) == self::tokenizer)) {
-			$this->prepare = true;
-			if (preg_match("/\s/", $set))
-				throw new Exception(__CLASS__ . "->escape prepare-token must not have space");
-			$counter = $this->bind_count++;
-			$this->bind->$counter = new stdClass();
-			$this->bind->$counter->bind = "Param";
-			$this->bind->$counter->key = $set;
-			$this->bind->$counter->type = PDO::PARAM_STR;
-			$this->bind->$counter->value = self::null_string;
-		}
-		if (is_a($set, "x²bool")) {
-			$set = ($set->value ? "1" : "0") . " "
-					. self::escape($set->alias, self::esc_key);
-		} else if (is_a($set, "x²number")) {
-			$set = $set->value . " "
-					. self::escape($set->alias, self::esc_key);
-		} else if (is_a($set, "x²key")) {
-			$set = self::escape($set->value, self::esc_key) . " "
-					. self::escape($set->alias, self::esc_key);
-		} else if (is_a($set, "x²string")) {
-			$set = self::escape($set->value, self::esc_string) . " "
-					. self::escape($set->alias, self::esc_key);
-		} else if (is_a($set, "x²token")) {
-			$set = self::escape(self::tokenizer . $set->value, self::esc_non) . " "
-					. self::escape($set->alias, self::esc_key);
-		} else if (is_a($set, "x²sql")) {
-			if (!$set->alias)
-				throw new Exception(__CLASS__
-				. "->implode: nested selects need alias");
-			$set = "(" . $set->command . ")"
-					. self::escape($set->alias, self::esc_key);
-			if (@$set->prepare) {
-				$this->prepare = true;
-				foreach ($set->bind as $key => $bind) {
-					$this->bind_count+=1;
-					$this->bind->{$this->bind_count + $set->bind_count} = $bind;
-				}
-			}
-		} else if (is_a($set, "x²func")) {
-			$str = array();
-			foreach ($set->argus as $arg) {
-				$str[] = $this->combine($arg);
-			}
-			$set = $set->name . "(" .
-					implode(",", $str) . ")" .
-					self::escape($set->alias, self::esc_key);
-		} else if (is_object($set)) {
-			switch (@$set->type) {
-				case "null" :case "bool" :case "number" :case "string" :case "key" :case "token" :
-					$x²class = "x²" . $set->type;
-					$set = $this->implode(new $x²class($set->value, @$set->alias));
-					break;
-				case "func": $set = $this->implode(new x²func($set->name, @$set->argus, @$set->alias));
-					break;
-				case "query": $set = $this->implode(new x²sql($set));
-					break;
-				default :
-					throw
-					new Exception(__CLASS__ . "->implode unkown type");
-					break;
-			}
-		} elseif (is_bool($set)) {
-			$set = $set ? "1" : "0";
-		} elseif (is_numeric($set)) {
-			;
-		} elseif (is_string($set)) {
-			$set = self::escape($set, self::esc_key);
-		} elseif (is_array($set)) {
-			foreach ($set as $key => $val)
-				$set[$key] = $this->implode($val);
-			$set = implode($set, ",") . " ";
-		}
-		return $set;
-	}
-
-	/**
-	 * 
-	 * Besides combine() and implode() a input iterator.
-	 * Don't know what and if there will be only one iterator.
-	 *
-	 * @param $set
-	 *
-	 * @return str
-	 *
-	 * @access private
-	 */
-	private function combine(&$set) {
-		$str = "";
-		if (is_string($set) && ( $set == self::placerholder || substr($set, 0, 1) == self::tokenizer)) {
-			$this->prepare = true;
-			if (preg_match("/\s/", $str))
-				throw new Exception(__CLASS__ . "->escape prepare-token must not have space");
-			$counter = $this->bind_count++;
-			$this->bind->$counter = new stdClass();
-			$this->bind->$counter->bind = "Param";
-			$this->bind->$counter->key = $str;
-			$this->bind->$counter->type = PDO::PARAM_STR;
-			$this->bind->$counter->value = self::null_string;
-			return $set;
-		}
-		if (is_a($set, "x²bool") || is_a($set, "x²string") || is_a($set, "x²key") || is_a($set, "x²number") || is_a($set, "x²null"))
-			return $this->implode(array($set));
-		if (is_a($set, "x²sql")) {
-			if ($set->prepare) {
-				$this->prepare = true;
-				foreach ($set->bind as $key => $bind) {
-					$this->bind_count+=1;
-					$this->bind->{$this->bind_count + $set->bind_count} = $bind;
-				}
-			}
-			return "(" . $set->command . ")";
-		}
-		if (is_a($set, "x²func")) {
-			$str = array();
-			foreach ($set->argus as $arg) {
-				$str[] = $this->combine($arg);
-			}
-			return $set->name . "(" .
-					implode(",", $str) . ")" .
-					self::escape($set->alias, self::esc_key);
-		}
-		if (is_numeric($set))
-			return " " . $set . " ";
-
-		if (is_string($set)) {
-
-			return " " . self::escape($set, self::esc_string) . " ";
-		}
-		if (is_array($set)) {
-
-			$str = "(";
-			foreach ($set as $key => $item) {
-
-				$str.=$this->combine($item);
-			}
-			return $str . ") ";
-		}
-
-		if (is_object($set)) {
-
-			if (@strtolower($set->bind) == "column") {
-				return self::escape($set->key, self::esc_non);
-			}
-			if (isset($set->bind)) {
-				$this->prepare = true;
-				$this->bind->{$set->key} = $set;
-				return self::escape(self::tokenizer . $set->key, self::esc_non);
-			}
-			switch (@$set->type) {
-				case "null" : return $this->implode(
-									array(new x²null($val->value, @$val->alias)));
-					break;
-				case "bool" : return $this->implode(
-									array(new x²bool($val->value, @$val->alias)));
-					break;
-				case "number" : return $this->implode(
-									array(new x²number($val->value, @$val->alias)));
-					break;
-				case "string" : return $this->implode(
-									array(new x²string($val->value, @$val->alias)));
-					break;
-				case "key" : return $this->implode(
-									array(new x²keyword($val->value, @$val->alias)));
-					break;
-				case "query": return $this->implode(array(new x²sql($val)));
-					break;
-				default :
-					throw
-					new Exception(__CLASS__ . "->implode unkown type");
-
-					break;
-			}
-		}
-	}
-
 	public function complode($set, $cfg = null) {
-
+		if ($set === null){
+			return $this->complode(new x²null(),$cfg);
+		}
 		if (is_array($set)) {
 			$delimiter = @$cfg->delimiter ? $cfg->delimiter : x²sql::char_list_delimiter;
 			foreach ($set as $subset)
@@ -481,6 +319,13 @@ class x²sql {
 			}
 			switch ($class) {
 				case self::x²place :
+					$this->prepare = true;
+					$counter = $this->bind_count++;
+					$this->bind->$counter = new stdClass();
+					$this->bind->$counter->bind = "Param";
+					$this->bind->$counter->key = self::placerholder;
+					$this->bind->$counter->type = PDO::PARAM_STR;
+					$this->bind->$counter->value = self::null_string;						
 					if (@$cfg->no_alias) {
 						return x²sql::escape($set->value, "");
 					}
@@ -489,7 +334,16 @@ class x²sql {
 					break;
 				case self::x²token :
 					if (2 > strlen($set->value))
-						throw new Exception(__CLASS__ . "->complode emptyString not allowed");
+						throw new Exception(__CLASS__ . "->complode emptyToken not allowed");
+					if (preg_match("/\s/", $set->value))
+						throw new Exception(__CLASS__ . "->escape prepare-token must not have space");
+					$this->prepare = true;
+					$counter = $this->bind_count++;
+					$this->bind->$counter = new stdClass();
+					$this->bind->$counter->bind = "Param";
+					$this->bind->$counter->key = $set->value;
+					$this->bind->$counter->type = PDO::PARAM_STR;
+					$this->bind->$counter->value = self::null_string;	
 					if (@$cfg->no_alias) {
 						return x²sql::escape(x²sql::tokenizer . $set->value, "");
 					}
@@ -506,7 +360,7 @@ class x²sql {
 						throw new Exception(__CLASS__ . "->complode emptyString not allowed");
 					if (@$cfg->escape) {
 						return x²sql::escape($set->value, $cfg->escape)
-								. (!@$cfg->no_alias ? " " . x²sql::escape($set->alias, self::esc_key) : "");
+								. (@$cfg->no_alias ? "":  " ".x²sql::escape($set->alias, self::esc_key) );
 					} elseif (@$cfg->no_alias) {
 						return x²sql::escape($set->value, $set->escape);
 					} else {
@@ -521,8 +375,8 @@ class x²sql {
 					return $set->name
 							. self::char_bracket_open
 							. implode(self::char_list_delimiter, $str)
-							. self::char_bracket_close .
-							self::escape($set->alias, self::esc_key);
+							. self::char_bracket_close 
+							. (@$cfg->no_alias ? "" : " ". x²sql::escape($set->alias, self::esc_key) );
 					break;
 				case __CLASS__:
 					if ($set->prepare) {
@@ -597,20 +451,19 @@ class x²sql {
 	 *
 	 * @access public
 	 */
-	static public function escape($str, $esc = self::esc_string) {
-		$str = trim($str);
-		$char = substr($str, 0, 1);
-		if (is_bool($str))
+	static public function escape($str, $esc = "") {
+		if ($str === self::null_string || $str === null) {
+			return self::null_string;
+		}
+		elseif (is_bool($str))
 			return $str ? $esc . "1" . $esc : $esc . "0" . $esc;
 		elseif ($str === self::placerholder)
 			return $str;
-		elseif ($str === self::null_string || $str === null) {
-			return self::null_string;
-		} elseif (is_numeric($str)) {
+		 elseif (is_numeric($str))
 			return $esc . $str . $esc;
-		} elseif (preg_match(self::regex_operators, $str)) {
-			return $str;
-		} elseif (substr($str, 0, 1) != self::tokenizer) {
+		 elseif (preg_match(self::regex_operators, $str)) 
+			return trim($str);
+		 elseif (substr($str, 0, 1) != self::tokenizer) {
 
 			$ndl = array("/\\r/", "/\\n/", "/\\t/");
 			$rep = array("\\r", "\\n", "\\t");
@@ -621,7 +474,7 @@ class x²sql {
 			}
 			return $esc . preg_replace($ndl, $rep, $str) . $esc;
 		} else {
-			if (preg_match("/\s/", $str))
+			if (preg_match("/\s/", trim($str)))
 				throw new Exception("tokenizer must have no space");
 		}
 
@@ -691,6 +544,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function from($set) {
+		if ($set ===null) return $this;
 		$cfg = new stdClass;
 		$cfg->cast = "x²key";
 		$cfg->allow = array(self::x²string, self::x²key, self::x²token, __CLASS__);
@@ -768,6 +622,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function where($set) {
+		if ($set ===null) return $this;
 		if (!is_array($set) && !is_object($set)) {
 			$set = array($set);
 		}
@@ -789,6 +644,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function having($set) {
+		if ($set ===null) return $this;
 		if (!is_array($set) && !is_object($set)) {
 			$set = array($set);
 		}
@@ -810,6 +666,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function group($set) {
+		if ($set ===null) return $this;
 		if (!is_array($set) && !is_object($set)) {
 			$set = array($set);
 		}
@@ -831,6 +688,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function order($set) {
+		if ($set ===null) return $this;
 		if (!is_array($set) && !is_object($set)) {
 			$set = array($set);
 		}
@@ -856,12 +714,18 @@ class x²sql {
 	 * @access public
 	 */
 	public function limit($set) {
+		if ($set ===null) return $this;
 		if (is_a($set,"x²number")){
 			$set = $set->value;
 		}
 		if (is_numeric($set) ) {
 			$this->command.= $this->last_append =
-					" " . __FUNCTION__ . " ".self::escape((round($set)), self::esc_num);
+					" " . __FUNCTION__ . " ".$this->complode(round($set));
+			return $this;
+		}
+		if(is_string($set) &&substr($set,0,1)==self::tokenizer || $set == self::placerholder) {
+			$this->command.= $this->last_append =
+					" " . __FUNCTION__ . " ".$this->complode($set);
 			return $this;
 		}
 		throw new Exception(__CLASS__."->limit: var is not a number");
@@ -878,16 +742,23 @@ class x²sql {
 	 * @access public
 	 */
 	public function offset($set) {
+		if ($set ===null) return $this;
 		if (is_a($set,"x²number")){
 			$set = $set->value;
 		}
 		if (is_numeric($set) ) {
 			$this->command.= $this->last_append =
-					" " . __FUNCTION__ . " ".self::escape((round($set)), self::esc_num);
+					" " . __FUNCTION__ . " ".$this->complode(round($set));
+			return $this;
+		}
+		if(is_string($set) &&substr($set,0,1)==self::tokenizer || $set == self::placerholder) {
+			$this->command.= $this->last_append =
+					" " . __FUNCTION__ . " ".$this->complode($set);
 			return $this;
 		}
 		throw new Exception(__CLASS__."->limit: var is not a number");
 	}
+
 
 	///integer-group
 
@@ -902,6 +773,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function columns($set) {
+		if ($set ===null) return $this;
 		if (!is_array($set)) {
 			$set = array($set);
 		}
@@ -924,7 +796,12 @@ class x²sql {
 	 * @access public
 	 */
 	public function values($set) {
-		$this->command.= __FUNCTION__ . " (" . $this->implode($set) . ")";
+		if (!is_array($set)) {
+			$set = array($set);
+		}
+		$cfg = new stdClass();
+		$cfg->no_alias = true;
+		$this->command.= $this->last_append = $this->complode($set, $cfg);
 		return $this;
 	}
 
@@ -942,13 +819,19 @@ class x²sql {
 	 * @access public
 	 */
 	public function set($set, $options = null) {
+		if ($set ===null) return $this;
 		$this->command.=" " . __FUNCTION__ . " ";
+		if(!is_array($set) && !is_object($set)) 
+			throw new Exception("set input must be iteratable array or object");
+		$cfg = new stdClass;
+		$cfg->no_alias=true;
+		$tmp = array();
 		foreach ($set as $key => $val) {
-			$this->command.= self::escape($key, self::esc_key);
-			$this->command.= "=";
-			$this->command.= self::escape($val, self::esc_string);
-		}
-		$this->command.=" ";
+			$tmp[$key]= self::escape($key, self::esc_key);
+			$tmp[$key].= "=";
+			$tmp[$key].= $this->complode($val,$cfg);
+		}	
+		$this->command.= $this->last_append = implode(self::char_list_delimiter,$tmp). " ";
 		return $this;
 	}
 
@@ -1049,7 +932,7 @@ class x²func {
 	/**
 	 * 
 	 */
-	public function __construct($name, $argus = null, $alias = null) {
+	public function __construct($name, $argus = null, $alias = "") {
 		if (preg_match("/\s|\n|\r|\t/", $name))
 			throw new Exception(__CLASS__ . "->name must not have spaces");
 		$this->name = $name;
