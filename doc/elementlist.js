@@ -1,3 +1,3 @@
 
 var ApiGen = ApiGen || {};
-ApiGen.elements = [["c","stdClass"],["c","testunits\\_x2sql"],["c","testunits\\AllTests"],["c","testunits\\array2xml"],["c","x2bool"],["c","x2function"],["c","x2keyword"],["c","x2null"],["c","x2number"],["c","x2sql"],["c","x2string"],["c","x2token"]];
+ApiGen.elements = [["c","_x\u00b2sql"],["c","AllTests"],["c","stdClass"],["c","x\u00b2base"],["c","x\u00b2bool"],["c","x\u00b2func"],["c","x\u00b2key"],["c","x\u00b2null"],["c","x\u00b2number"],["c","x\u00b2place"],["c","x\u00b2sql"],["c","x\u00b2string"],["c","x\u00b2token"]];

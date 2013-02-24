@@ -4,10 +4,10 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="generator" content="ApiGen 2.8.0" />
 
-	<title>Class testunits\array2xml | x2sql</title>
+	<title>Class x²base | x2sql</title>
 
 	<script type="text/javascript" src="resources/combined.js?4247867498"></script>
-	<script type="text/javascript" src="elementlist.js?361468981"></script>
+	<script type="text/javascript" src="elementlist.js?1196783408"></script>
 	<link rel="stylesheet" type="text/css" media="all" href="resources/style.css?3505392360" />
 
 </head>
@@ -19,13 +19,13 @@
 
 
 		<div id="groups">
-			<h3>Namespaces</h3>
+			<h3>Packages</h3>
 			<ul>
-				<li><a href="namespace-None.html">None</a>
+				<li><a href="package-None.html">None</a>
 						</li>
-				<li><a href="namespace-PHP.html">PHP</a>
+				<li><a href="package-PHP.html">PHP</a>
 						</li>
-				<li class="active"><a href="namespace-testunits.html">testunits</a>
+				<li class="active"><a href="package-x..sql.html">x²sql</a>
 						</li>
 			</ul>
 		</div>
@@ -36,9 +36,17 @@
 		<div id="elements">
 			<h3>Classes</h3>
 			<ul>
-				<li><a href="class-testunits._x2sql.html">_x2sql</a></li>
-				<li><a href="class-testunits.AllTests.html">AllTests</a></li>
-				<li class="active"><a href="class-testunits.array2xml.html">array2xml</a></li>
+				<li><a href="class-_x..sql.html">_x²sql</a></li>
+				<li class="active"><a href="class-x..base.html">x²base</a></li>
+				<li><a href="class-x..bool.html">x²bool</a></li>
+				<li><a href="class-x..func.html">x²func</a></li>
+				<li><a href="class-x..key.html">x²key</a></li>
+				<li><a href="class-x..null.html">x²null</a></li>
+				<li><a href="class-x..number.html">x²number</a></li>
+				<li><a href="class-x..place.html">x²place</a></li>
+				<li><a href="class-x..sql.html">x²sql</a></li>
+				<li><a href="class-x..string.html">x²string</a></li>
+				<li><a href="class-x..token.html">x²token</a></li>
 			</ul>
 
 
@@ -66,7 +74,7 @@
 				<a href="index.html" title="Overview"><span>Overview</span></a>
 			</li>
 			<li>
-				<a href="namespace-testunits.html" title="Summary of testunits"><span>Namespace</span></a>
+				<a href="package-x..sql.html" title="Summary of x²sql"><span>Package</span></a>
 			</li>
 			<li class="active">
 <span>Class</span>			</li>
@@ -81,17 +89,27 @@
 	</div>
 
 <div id="content" class="class">
-	<h1>Class array2xml</h1>
+	<h1>Class x²base</h1>
 
 
 	<div class="description">
 	
-<p>basic class for converting an array to xml.</p>
+<p>Avoid string escaping and mark the statement to be prepared</p>
 
 	</div>
 
 
 
+	<div>
+		<h4>Direct known subclasses</h4>
+			<a href="class-x..bool.html">x²bool</a>, 
+			<a href="class-x..key.html">x²key</a>, 
+			<a href="class-x..null.html">x²null</a>, 
+			<a href="class-x..number.html">x²number</a>, 
+			<a href="class-x..place.html">x²place</a>, 
+			<a href="class-x..string.html">x²string</a>, 
+			<a href="class-x..token.html">x²token</a>
+	</div>
 
 
 
@@ -101,12 +119,18 @@
 	<div class="info">
 		
 		
-		<b>Namespace:</b> <a href="namespace-testunits.html">testunits</a><br />
 		
+		<b>Package:</b> <a href="package-x..sql.html">x²sql</a><br />
 
+				<b>Copyright:</b>
+				Copyright (c) 2013.<br />
+				<b>License:</b>
+				<a href="http://creativecommons.org/licenses/by/3.0/deed.de">http://creativecommons.org/licenses/by/3.0/deed.de</a><br />
 				<b>Author:</b>
-				Matt Wiseman (trollboy at shoggoth.net)<br />
-		<b>Located at</b> <a href="source-class-testunits.array2xml.html#208-279" title="Go to source code">test/_x2sql.php</a><br />
+				mborchert<br />
+				<b>Since</b>
+				<br />
+		<b>Located at</b> <a href="source-class-x..base.html#953-977" title="Go to source code">x²sql.php</a><br />
 	</div>
 
 
@@ -124,63 +148,17 @@
 
 		<td class="name"><div>
 		<a class="anchor" href="#___construct">#</a>
-		<code><a href="source-class-testunits.array2xml.html#220-240" title="Go to source code">__construct</a>( <span>array <var>$array</var></span> )</code>
+		<code><a href="source-class-x..base.html#967-975" title="Go to source code">__construct</a>( <span>mixed <var>$value</var></span>, <span>mixed <var>$alias</var> = <span class="php-quote">&quot;&quot;</span></span> )</code>
 
 		<div class="description short">
 			
-<p>basic constructor</p>
-
 		</div>
 
 		<div class="description detailed hidden">
 			
-<p>basic constructor</p>
 
 
 
-				<h4>Parameters</h4>
-				<div class="list"><dl>
-					<dt><var>$array</var></dt>
-					<dd><code>array</code><br>$array</dd>
-				</dl></div>
-
-
-
-
-
-		</div>
-		</div></td>
-	</tr>
-	<tr data-order="saveXML" id="_saveXML">
-
-		<td class="attributes"><code>
-			 public 
-			string
-			
-			</code>
-		</td>
-
-		<td class="name"><div>
-		<a class="anchor" href="#_saveXML">#</a>
-		<code><a href="source-class-testunits.array2xml.html#270-277" title="Go to source code">saveXML</a>( )</code>
-
-		<div class="description short">
-			
-<p>get the finished xml</p>
-
-		</div>
-
-		<div class="description detailed hidden">
-			
-<p>get the finished xml</p>
-
-
-
-
-				<h4>Returns</h4>
-				<div class="list">
-					<code>string</code><br />
-				</div>
 
 
 
@@ -203,18 +181,18 @@
 
 	<table class="summary" id="properties">
 	<caption>Properties summary</caption>
-	<tr data-order="data" id="$data">
+	<tr data-order="value" id="$value">
 		<td class="attributes"><code>
 			public  
 			mixed
 		</code></td>
 
 		<td class="name">
-				<a href="source-class-testunits.array2xml.html#215" title="Go to source code"><var>$data</var></a>
+				<a href="source-class-x..base.html#962" title="Go to source code"><var>$value</var></a>
 		</td>
 		<td class="value"><code></code></td>
 		<td class="description"><div>
-			<a href="#$data" class="anchor">#</a>
+			<a href="#$value" class="anchor">#</a>
 
 			<div class="description short">
 				
@@ -226,18 +204,18 @@
 			</div>
 		</div></td>
 	</tr>
-	<tr data-order="dom_tree" id="$dom_tree">
+	<tr data-order="alias" id="$alias">
 		<td class="attributes"><code>
 			public  
 			mixed
 		</code></td>
 
 		<td class="name">
-				<a href="source-class-testunits.array2xml.html#216" title="Go to source code"><var>$dom_tree</var></a>
+				<a href="source-class-x..base.html#963" title="Go to source code"><var>$alias</var></a>
 		</td>
 		<td class="value"><code></code></td>
 		<td class="description"><div>
-			<a href="#$dom_tree" class="anchor">#</a>
+			<a href="#$alias" class="anchor">#</a>
 
 			<div class="description short">
 				
@@ -249,18 +227,18 @@
 			</div>
 		</div></td>
 	</tr>
-	<tr data-order="item_tag" id="$item_tag">
+	<tr data-order="display" id="$display">
 		<td class="attributes"><code>
 			public  
-			string
+			mixed
 		</code></td>
 
 		<td class="name">
-				<a href="source-class-testunits.array2xml.html#217" title="Go to source code"><var>$item_tag</var></a>
+				<a href="source-class-x..base.html#964" title="Go to source code"><var>$display</var></a>
 		</td>
-		<td class="value"><code><span class="php-quote">&quot;o&quot;</span></code></td>
+		<td class="value"><code></code></td>
 		<td class="description"><div>
-			<a href="#$item_tag" class="anchor">#</a>
+			<a href="#$display" class="anchor">#</a>
 
 			<div class="description short">
 				
@@ -272,18 +250,18 @@
 			</div>
 		</div></td>
 	</tr>
-	<tr data-order="document_tag" id="$document_tag">
+	<tr data-order="escape" id="$escape">
 		<td class="attributes"><code>
 			public  
 			string
 		</code></td>
 
 		<td class="name">
-				<a href="source-class-testunits.array2xml.html#218" title="Go to source code"><var>$document_tag</var></a>
+				<a href="source-class-x..base.html#965" title="Go to source code"><var>$escape</var></a>
 		</td>
-		<td class="value"><code><span class="php-quote">&quot;queries&quot;</span></code></td>
+		<td class="value"><code><code><a href="class-x..sql.html#esc_string">x²sql::<b>esc_string</b></a></code></code></td>
 		<td class="description"><div>
-			<a href="#$document_tag" class="anchor">#</a>
+			<a href="#$escape" class="anchor">#</a>
 
 			<div class="description short">
 				

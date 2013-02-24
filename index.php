@@ -9,8 +9,7 @@
     <li><a href="doc">documentation</a></li>
     <li><a href="test">test</a></li>
     <li>
-        <a href="x²sql-latest.zip">download zip</a>
-        <a href="x²sql-latest.targz">download targz</a>
+        <a href="https://github.com/mborchert71/x2sql/archive/master.zip">download zip</a>
     </li>
 </ul>
 <pre>
