@@ -37,22 +37,22 @@ class _x²sql extends UnitTestCase {
 		$this->complete = true;
 		$this->stack[0]="test_Sql";
 		$this->stack[1]="test___construct";
-		$this->stack[2]="test_query";
+		$this->stack[2]="test_query";//ok
 		$this->stack[3]="test_escape";
-		$this->stack[4]="test_select";
-		$this->stack[5]="test_from";
-		$this->stack[6]="test_where";
-		$this->stack[7]="test_having";
-		$this->stack[8]="test_group";
-		$this->stack[9]="test_order";
-		$this->stack[10]="test_limit";
-		$this->stack[11]="test_offset";
-		$this->stack[12]="test_insert";
-		$this->stack[13]="test_columns";
+		$this->stack[4]="test_select";//ok
+		$this->stack[5]="test_from";//ok
+		$this->stack[6]="test_where";//ok
+		$this->stack[7]="test_having";//ok
+		$this->stack[8]="test_group";//ok
+		$this->stack[9]="test_order";//ok
+		$this->stack[10]="test_limit";//ok
+		$this->stack[11]="test_offset";//ok
+		$this->stack[12]="test_insert";//ok
+		$this->stack[13]="test_columns";//ok
 		$this->stack[14]="test_values";
-		$this->stack[15]="test_update";
+		$this->stack[15]="test_update";//ok
 		$this->stack[16]="test_set";
-		$this->stack[17]="test_delete";
+		$this->stack[17]="test_delete";//ok
 		$this->stack[18]="test_fetch";
 		$this->stack[19]="test_fetch_type";
 		$this->stack[20]="test_alias";
@@ -112,11 +112,13 @@ class _x²sql extends UnitTestCase {
 		;
 	}
 	/**
-	* test method query
+	 * test method query.
+	 * the rest is handled in method __construct.
+	 * returns object x²sql.
 	*/
 	function test_query() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->assertIsA(x²sql::query(), "x²sql");
 	}
 	/**
 	* test method escape
@@ -177,11 +179,14 @@ class _x²sql extends UnitTestCase {
 		}
 	}
 	/**
-	* test method from
+	 * test method from.
+	 * this method handles also: insert,update,delete.
 	*/
-	function test_from() {
-		if(!$this->runTest(__FUNCTION__))return;
+	function test_from($call="from",$word=" from") {
+		
+		if(!$this->runTest(__FUNCTION__) && $word ==" from")return;
 		$k = x²sql::esc_key;
+		$n = x²sql::esc_num;
 		$t = x²sql::tokenizer;
 		$in = array(
 			true, false,
@@ -191,28 +196,28 @@ class _x²sql extends UnitTestCase {
 			":tok",
 			array("t1", "t2", "t3"),
 			new x²key("table","alias"),
-			x²sql::query()->select()->from("t")->where(array(new x²key("x"),"<","3"))->alias("alias")
+			x²sql::query()->select()->from("t")->where(array(new x²key("x"),"<",3))->alias("alias")
 		);
 		$in[] = array($in[6],$in[9],$in[10]);
 		$out = array(
-			" from {$k}1{$k}",
-			" from {$k}0{$k}",
-			" from {$k}234{$k}",
-			" from {$k}0.4{$k}",
-			" from {$k}68{$k}",
-			" from {$k}456.325{$k}",
-			" from {$k}col{$k}",
-			" from {$t}tok",
-			" from {$k}t1{$k},{$k}t2{$k},{$k}t3{$k}",
-			" from {$k}table{$k} {$k}alias{$k}",
-			" from (select * from {$k}t{$k} where ({$k}x{$k}   <  3 ) ) {$k}alias{$k}" 
+			"$word {$k}1{$k}",
+			"$word {$k}0{$k}",
+			"$word {$k}234{$k}",
+			"$word {$k}0.4{$k}",
+			"$word {$k}68{$k}",
+			"$word {$k}456.325{$k}",
+			"$word {$k}col{$k}",
+			"$word {$t}tok",
+			"$word {$k}t1{$k},{$k}t2{$k},{$k}t3{$k}",
+			"$word {$k}table{$k} {$k}alias{$k}",
+			"$word (select * from {$k}t{$k} where ({$k}x{$k} < {$n}3{$n})) {$k}alias{$k}" 
 		);
-		$out[] = " from {$k}col{$k},{$k}table{$k} {$k}alias{$k},(select * from {$k}t{$k} where ({$k}x{$k}   <  3 ) ) {$k}alias{$k}";
+		$out[] = "$word {$k}col{$k},{$k}table{$k} {$k}alias{$k},(select * from {$k}t{$k} where ({$k}x{$k} < {$n}3{$n})) {$k}alias{$k}";
 		//expect pass
 		$this->assertEqual(count($in), count($out));
 		$c = count($in);
 		while ($c--) {
-			$inst = $this->test->from($in[$c]);
+			$inst = $this->test->$call($in[$c]);
 			$this->assertEqual($out[$c], $this->test->last_append);
 		}
 		//expect fail
@@ -235,53 +240,78 @@ class _x²sql extends UnitTestCase {
 
 	}
 	/**
-	* test method where
+	 * test method where.
+	 * this method also handles : having,group,order. 
 	*/
-	function test_where() {
-		if(!$this->runTest(__FUNCTION__))return;
-		;
+	function test_where($call="where",$word=" where") {
+		if(!$this->runTest(__FUNCTION__) && $word ==" where")return;
+		$k= x²sql::esc_key;
+		$n= x²sql::esc_num;
+		$this->assertEqual(
+				"$word ({$k}x{$k} < {$n}3{$n})",
+				$this->test->$call(array(new x²key("x"),"<",3))->last_append,
+				"%s");
+		$this->assertEqual(
+				"$word ({$k}x{$k} in (select * from {$k}table{$k}))",
+				$this->test->$call(array(new x²key("x"),"in",x²sql::query()->select()->from("table")))->last_append,
+				"%s");
+		$this->assertEqual(
+				"$word (({$k}x{$k} < {$n}3{$n}) and (1 <> {$n}3{$n}))",
+				$this->test->$call(array(array(new x²key("x"),"<",3),"and",array(true,"<>",3)))->last_append,
+				"%s");
+
 	}
 	/**
 	* test method having
 	*/
 	function test_having() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_where("having", " having");
 	}
 	/**
 	* test method group
 	*/
 	function test_group() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_where("group", " group by");
 	}
 	/**
 	* test method order
 	*/
 	function test_order() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_where("order", " order by");
 	}
 	/**
 	* test method limit
 	*/
-	function test_limit() {
+	function test_limit($call="limit",$word=" limit") {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->assertEqual("$word 14", $this->test->$call("14")->last_append);
+		$this->assertEqual("$word 14", $this->test->$call(14)->last_append);
+		$this->assertEqual("$word 14", $this->test->$call(13.5)->last_append);
+		$this->assertEqual("$word 14", $this->test->$call(new x²number(13.5))->last_append);
+		$inst =null;
+		try{
+			$inst = $this->test->$call("2m3");
+		}catch(Exception $inst){
+			
+		}
+		$this->assertIsA($inst, "Exception","%s :2m3");
 	}
 	/**
 	* test method offset
 	*/
 	function test_offset() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_limit("offset", " offset");
 	}
 	/**
 	* test method insert
 	*/
 	function test_insert() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_from("insert","insert into");
 	}
 	/**
 	* test method columns
@@ -346,7 +376,7 @@ class _x²sql extends UnitTestCase {
 	*/
 	function test_update() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_from("update","update");
 	}
 	/**
 	* test method set
@@ -360,7 +390,7 @@ class _x²sql extends UnitTestCase {
 	*/
 	function test_delete() {
 		if(!$this->runTest(__FUNCTION__))return;
-		;
+		$this->test_from("delete","delete from");
 	}
 	/**
 	* test method fetch
