@@ -12,10 +12,7 @@
  * @license		http://creativecommons.org/licenses/by/3.0/deed.de
  * @link		http://get-resource.net/app/php/x²sql
  * @since		Version 1.0
- * @todo: union  join  intersect
- * @todo: cleanup: implode, values + combine
- *                 issue: stringvalues in regex_operator get not escaped. (set caller option)
- *                 alias nicht im where, having, group und order (set caller option)
+ * @todo: join  intersect
  * @todo: support special settings : distinct, etc.
  * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow
  * @todo: xml2sql
@@ -34,7 +31,6 @@ class x²sql {
 	 * Indicate a string in the ConfigurationSet to be replaced.
 	 * Default replacement off requested tokens is stringEscaped.
 	 */
-
 	const tokenizer = ":";
 	/**
 	 * The Standard Placeholder in Queries
@@ -909,6 +905,23 @@ class x²sql {
 	 */
 	public function comment($text) {
 		$this->name = $text;
+		return $this;
+	}
+	/**
+	 * 
+	 * Additional information for the Statement
+	 *
+	 * @param $name
+	 *
+	 * @return x²sql $this
+	 *
+	 * @access public
+	 */
+	public function union($set) {
+		$cfg = new stdClass();
+		$cfg->no_alias = true;
+		$cfg->no_brackets=true;
+		$this->command.= $this->last_append =" union ". $this->complode($set, $cfg);
 		return $this;
 	}
 
