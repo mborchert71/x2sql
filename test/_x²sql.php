@@ -347,7 +347,7 @@ class _x²sql extends UnitTestCase {
 	function test_group() {
 		if (!$this->runTest(__FUNCTION__))
 			return;
-		$this->test_where("group", " group by");
+		$this->test_select("group", " group by");
 	}
 
 	/**
@@ -356,7 +356,11 @@ class _x²sql extends UnitTestCase {
 	function test_order() {
 		if (!$this->runTest(__FUNCTION__))
 			return;
-		$this->test_where("order", " order by");
+		$k = x²sql::esc_key;
+		$this->test->reset();
+		$this->assertEqual(" order by {$k}col{$k}", $this->test->order(new x²order("col"))->last_append);
+		$this->assertEqual(" order by {$k}col{$k} AsC", $this->test->order(new x²order("col","AsC"))->last_append);
+		$this->assertEqual(" order by {$k}col{$k} asc,{$k}col2{$k},{$k}col3{$k} desC", $this->test->order(array(new x²order("col","asc"),"col2",new x²order("col3","desC")))->last_append);
 	}
 
 	/**
@@ -590,6 +594,7 @@ class _x²sql extends UnitTestCase {
 	function test_union() {
 		if (!$this->runTest(__FUNCTION__))
 			return;
+		$this->test->reset();
 		$k = x²sql::esc_key;
 		$this->test->select()->from("books")->union(
 				x²sql::query()->select()->from("movies"));

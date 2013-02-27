@@ -96,6 +96,10 @@ class x²sql {
 	/**
 	 * 
 	 */
+	const x²order = "x²order";
+	/**
+	 * 
+	 */
 	const char_list_delimiter = ",";
 	/**
 	 * 
@@ -368,6 +372,9 @@ class x²sql {
 						return $set->display;
 					}
 					break;
+				case self::x²order:
+					return $set->display;
+					break;
 				case self::x²func:
 					$str = array();
 					foreach ($set->argus as $arg) {
@@ -411,6 +418,9 @@ class x²sql {
 							break;
 						case __CLASS__:
 							return $this->complode(new x²sql($set), $cfg);
+							break;
+						case self::x²order:
+							return $this->complode(new x²order($set->name,@$set->direction), $cfg);
 							break;
 						default:throw
 							new Exception(__CLASS__ . "->implode unkown type");
@@ -673,8 +683,9 @@ class x²sql {
 			$set = array($set);
 		}
 		$cfg = new stdClass;
-		$cfg->delimiter = " ";
 		$cfg->no_alias = true;
+		$cfg->no_brackets = true;
+		$cfg->cast = self::x²key;
 		$this->command.= $this->last_append = " " . __FUNCTION__ . " by " . $this->complode($set, $cfg);
 		return $this;
 	}
@@ -696,8 +707,10 @@ class x²sql {
 			$set = array($set);
 		}
 		$cfg = new stdClass;
-		$cfg->delimiter = " ";
 		$cfg->no_alias = true;
+		$cfg->no_brackets = true;
+		$cfg->allow=array(self::x²key,self::x²order,self::x²string,self::x²number);
+		$cfg->cast=self::x²order;
 		$this->command.= $this->last_append = " " . __FUNCTION__ . " by " . $this->complode($set, $cfg);
 		return $this;
 	}
@@ -1194,6 +1207,18 @@ class x²place extends x²base {
 		parent::__construct(x²sql::placerholder, $alias);
 		$this->display = x²sql::placerholder
 				. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
+	}
+
+}
+
+class x²order extends x²base {
+
+	public function __construct($value, $direction = "") {
+		if ("asc" != strtolower($direction) && "desc" != strtolower($direction) && $direction !== "")
+			throw new Exception(__CLASS__ . "->direction must be 'asc' 'desc' or emptyString");
+		parent::__construct($value, $direction);
+		$this->display = x²sql::escape($value,x²sql::esc_key)
+				. ($this->alias ? " " . $this->alias : "");
 	}
 
 }
