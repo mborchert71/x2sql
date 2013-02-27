@@ -457,7 +457,7 @@ class x²sql {
 			
 			if($this->current_call=="where" || $this->current_call=="having")
 				if (preg_match(self::regex_operators, $set) 
-					&& (@$cfg->array_position == 1 || @$cfg->array_position==3))
+					&& (@$cfg->array_position&1))
 					return $set;
 			if ($set == self::placerholder) {
 				return $this->complode(new x²place($set), $cfg);
