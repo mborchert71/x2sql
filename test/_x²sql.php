@@ -171,7 +171,8 @@ class _x²sql extends UnitTestCase {
 			0x44,
 			"col",
 			"?",
-			":tok"
+			":tok",
+			0
 		);
 		$out = array(
 			x²sql::null_string,
@@ -182,7 +183,8 @@ class _x²sql extends UnitTestCase {
 			0x44,
 			"col",
 			"?",
-			":tok"
+			":tok",
+			0
 		);
 		//expect pass
 		$this->assertEqual(count($in), count($out));
@@ -215,10 +217,11 @@ class _x²sql extends UnitTestCase {
 			new x²bool(true),
 			new x²key("id"),
 			new x²number(12),
+			new x²func("count",new x²number(0),"RecordCount"),
 			x²sql::query()->select(1)->alias("t"),
 			new x²string("string"),
 			new x²token("tok"),
-			new x²func("count", 0)
+			new x²func("count", "*")
 		);
 		$out = array(
 			"select *,{$k}c{$k}",
@@ -231,10 +234,11 @@ class _x²sql extends UnitTestCase {
 			"select 1",
 			"select {$k}id{$k}",
 			"select 12",
+			"select count(0) {$k}RecordCount{$k}",
 			"select (select {$k}1{$k}) {$k}t{$k}",
 			"select {$s}string{$s}",
 			"select {$t}tok",
-			"select count(0) "
+			"select count(*) "
 		);
 		$inst = $this->test->select($in[0]);
 		$this->assertEqual($this->test, $inst);
