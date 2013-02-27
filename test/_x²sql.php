@@ -172,7 +172,8 @@ class _x²sql extends UnitTestCase {
 			"col",
 			"?",
 			":tok",
-			0
+			0,
+			"=","<=","between"
 		);
 		$out = array(
 			x²sql::null_string,
@@ -184,7 +185,8 @@ class _x²sql extends UnitTestCase {
 			"col",
 			"?",
 			":tok",
-			0
+			0,
+			"=","<=","between"
 		);
 		//expect pass
 		$this->assertEqual(count($in), count($out));
@@ -207,7 +209,8 @@ class _x²sql extends UnitTestCase {
 		$c = x²sql::esc_non;
 		$t = x²sql::tokenizer;
 		$in = array(
-			array("*","c"),
+			array("=","<="),"between",
+			array(new x²operator("*"),"c"),
 			null, "",
 			true, false,
 			234, 4e-1, 0x44,
@@ -221,9 +224,10 @@ class _x²sql extends UnitTestCase {
 			x²sql::query()->select(1)->alias("t"),
 			new x²string("string"),
 			new x²token("tok"),
-			new x²func("count", "*")
+			new x²func("count", new x²operator("*"))
 		);
 		$out = array(
+			"select {$k}={$k},{$k}<={$k}","select {$k}between{$k}",
 			"select *,{$k}c{$k}",
 			"select *", "select *",
 			"select {$k}1{$k}", "select {$k}0{$k}",
@@ -347,7 +351,57 @@ class _x²sql extends UnitTestCase {
 	function test_group() {
 		if (!$this->runTest(__FUNCTION__))
 			return;
-		$this->test_select("group", " group by");
+		if (!$this->runTest(__FUNCTION__))
+			return;
+		$this->test->reset();
+		$k = x²sql::esc_key;
+		$s = x²sql::esc_string;
+		$n = x²sql::esc_num;
+		$c = x²sql::esc_non;
+		$t = x²sql::tokenizer;
+		$in = array(
+			array(new x²operator("*"),"c"),
+			null, "",
+			true, false,
+			234, 4e-1, 0x44,
+			456.325, "col",
+			"?", "{$t}tok",
+			array("id", "name", "value"),
+			new x²bool(true),
+			new x²key("id"),
+			new x²number(12),
+			new x²func("count",new x²number(0),"no-alias"),
+			x²sql::query()->select(1)->alias("no-alias"),
+			new x²string("string"),
+			new x²token("tok"),
+			new x²func("count", new x²operator("*"))
+		);
+		$out = array(
+			" group by *,{$k}c{$k}",
+			" group by ", " group by ",
+			" group by {$k}1{$k}", " group by {$k}0{$k}",
+			" group by {$k}234{$k}", " group by {$k}0.4{$k}", " group by {$k}68{$k}",
+			" group by {$k}456.325{$k}", " group by {$k}col{$k}",
+			" group by ?", " group by {$t}tok",
+			" group by {$k}id{$k},{$k}name{$k},{$k}value{$k}",
+			" group by 1",
+			" group by {$k}id{$k}",
+			" group by 12",
+			" group by count(0)",
+			" group by (select {$k}1{$k})",
+			" group by {$s}string{$s}",
+			" group by {$t}tok",
+			" group by count(*)"
+		);
+		$inst = $this->test->group($in[0]);
+		$this->assertEqual($this->test, $inst);
+		$this->assertEqual(count($in), count($out));
+		$c = count($in);
+		while ($c--) {
+			$inst = $this->test->group($in[$c]);
+			$this->assertEqual($out[$c], $this->test->last_append, "%s fail-index:$c");
+		}
+
 	}
 
 	/**

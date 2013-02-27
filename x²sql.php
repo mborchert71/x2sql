@@ -14,7 +14,7 @@
  * @since		Version 1.0
  * @todo: join  intersect
  * @todo: support special settings : distinct, etc.
- * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow
+ * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow,array_position
  * @todo: xml2sql
  */
 // ------------------------------------------------------------------------
@@ -97,6 +97,10 @@ class x²sql {
 	 * 
 	 */
 	const x²order = "x²order";
+	/**
+	 * 
+	 */
+	const x²operator = "x²operator";
 	/**
 	 * 
 	 */
@@ -194,6 +198,12 @@ class x²sql {
 	 * @var string
 	 */
 	public $last_append;
+	/**
+	 * handle exceptions in complode by asking for caller function
+	 *
+	 * @var string
+	 */
+	public $current_call;
 
 	/**
 	 * reset the object for reuse
@@ -305,13 +315,17 @@ class x²sql {
 	}
 
 	public function complode($set, $cfg = null) {
+		if (!$cfg)
+			$cfg = new stdClass;
 		if ($set === null) {
 			return $this->complode(new x²null(), $cfg);
 		}
 		if (is_array($set)) {
 			$delimiter = @$cfg->delimiter ? $cfg->delimiter : x²sql::char_list_delimiter;
-			foreach ($set as $subset)
+			foreach ($set as $key => $subset) {
+				$cfg->array_position = $key;
 				$_[] = $this->complode($subset, $cfg);
+			}
 			return ((@$cfg->no_brackets) ? "" : x²sql::char_bracket_open)
 					. implode($delimiter, $_)
 					. ((@$cfg->no_brackets) ? "" : x²sql::char_bracket_close);
@@ -372,7 +386,7 @@ class x²sql {
 						return $set->display;
 					}
 					break;
-				case self::x²order:
+				case self::x²order:case self::x²operator:
 					return $set->display;
 					break;
 				case self::x²func:
@@ -420,7 +434,10 @@ class x²sql {
 							return $this->complode(new x²sql($set), $cfg);
 							break;
 						case self::x²order:
-							return $this->complode(new x²order($set->name,@$set->direction), $cfg);
+							return $this->complode(new x²order($set->name, @$set->direction), $cfg);
+							break;
+						case self::x²operator:
+							return $this->complode(new x²operator($set->value), $cfg);
 							break;
 						default:throw
 							new Exception(__CLASS__ . "->implode unkown type");
@@ -430,13 +447,18 @@ class x²sql {
 					break;
 			}
 		} elseif (is_bool($set)) {
-			$set = $set ? 1 : 0;
+			$set = $set ? "1" : "0";
 			$class = @$cfg->cast ? $cfg->cast : "x²bool";
 			return $this->complode(new $class($set), $cfg);
 		} elseif (is_numeric($set)) {
 			$class = @$cfg->cast ? $cfg->cast : "x²number";
 			return $this->complode(new $class($set), $cfg);
 		} elseif (is_string($set)) {
+			
+			if($this->current_call=="where" || $this->current_call=="having")
+				if (preg_match(self::regex_operators, $set) 
+					&& (@$cfg->array_position == 1 || @$cfg->array_position==3))
+					return $set;
 			if ($set == self::placerholder) {
 				return $this->complode(new x²place($set), $cfg);
 			} elseif (substr($set, 0, 1) == self::tokenizer) {
@@ -449,8 +471,6 @@ class x²sql {
 	}
 
 	/**
-	 * 
-	 * escape the string with the appropiate scope-chars and take care of security.
 	 *
 	 * @param $str
 	 * @param $esc
@@ -461,7 +481,8 @@ class x²sql {
 	 *
 	 * @access public
 	 */
-	static public function escape($str, $esc = "") {
+	static public function escape($str, $esc = "", $operator = 0) {
+		if(is_string($str) && strlen($str)==0)return "";
 		if ($str === self::null_string || $str === null) {
 			return self::null_string;
 		} elseif (is_bool($str))
@@ -470,7 +491,7 @@ class x²sql {
 			return $str;
 		elseif (is_numeric($str))
 			return $esc . $str . $esc;
-		elseif (preg_match(self::regex_operators, $str))
+		elseif (preg_match(self::regex_operators, $str) && $operator)
 			return trim($str);
 		elseif (substr($str, 0, 1) != self::tokenizer) {
 
@@ -507,15 +528,18 @@ class x²sql {
 	 *
 	 * @access public
 	 */
-	public function select($set = array("*")) {
-		if ($set === "" || $set === null)
-			$set = array("*");
+	public function select($set = "*") {
+		$this->current_call = __FUNCTION__;
 		if (!$this->command_type)
 			$this->command_type = __FUNCTION__;
-		$cfg = new stdClass;
-		$cfg->no_brackets = true;
-		$cfg->cast = "x²key";
-		$this->command.= $this->last_append = __FUNCTION__ . " " . $this->complode($set, $cfg);
+		if ($set === "" || $set === null || $set === "*"){
+			$this->command.= $this->last_append = __FUNCTION__ . " *";
+		} else {
+			$cfg = new stdClass;
+			$cfg->no_brackets = true;
+			$cfg->cast = "x²key";
+			$this->command.= $this->last_append = __FUNCTION__ . " " . $this->complode($set, $cfg);
+		}
 		return $this;
 	}
 
@@ -532,6 +556,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function insert($set) {
+		$this->current_call = __FUNCTION__;
 		$this->command_type = __FUNCTION__;
 		$cfg = new stdClass;
 		$cfg->cast = "x²key";
@@ -553,6 +578,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function from($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		$cfg = new stdClass;
@@ -574,6 +600,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function update($set) {
+		$this->current_call = __FUNCTION__;
 		$this->command_type = __FUNCTION__;
 		$cfg = new stdClass;
 		$cfg->cast = "x²key";
@@ -594,6 +621,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function delete($set) {
+		$this->current_call = __FUNCTION__;
 		$this->command_type = __FUNCTION__;
 		$cfg = new stdClass;
 		$cfg->cast = "x²key";
@@ -631,6 +659,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function where($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (!is_array($set) && !is_object($set)) {
@@ -654,6 +683,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function having($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (!is_array($set) && !is_object($set)) {
@@ -677,6 +707,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function group($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (!is_array($set) && !is_object($set)) {
@@ -701,6 +732,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function order($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (!is_array($set) && !is_object($set)) {
@@ -709,8 +741,8 @@ class x²sql {
 		$cfg = new stdClass;
 		$cfg->no_alias = true;
 		$cfg->no_brackets = true;
-		$cfg->allow=array(self::x²key,self::x²order,self::x²string,self::x²number);
-		$cfg->cast=self::x²order;
+		$cfg->allow = array(self::x²key, self::x²order, self::x²string, self::x²number);
+		$cfg->cast = self::x²order;
 		$this->command.= $this->last_append = " " . __FUNCTION__ . " by " . $this->complode($set, $cfg);
 		return $this;
 	}
@@ -729,6 +761,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function limit($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (is_a($set, "x²number")) {
@@ -758,6 +791,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function offset($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (is_a($set, "x²number")) {
@@ -789,6 +823,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function columns($set) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		if (!is_array($set)) {
@@ -813,6 +848,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function values($set) {
+		$this->current_call = __FUNCTION__;
 		if (!is_array($set)) {
 			$set = array($set);
 		}
@@ -836,6 +872,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function set($set, $options = null) {
+		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
 		$this->command.=" " . __FUNCTION__ . " ";
@@ -864,6 +901,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function fetch($fetch) {
+		$this->current_call = __FUNCTION__;
 		if ($fetch)
 			$this->fetch = $fetch;
 		return $this;
@@ -880,6 +918,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function fetch_type($type) {
+		$this->current_call = __FUNCTION__;
 		if ($type)
 			$this->fetch_type = $type;
 		return $this;
@@ -896,6 +935,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function alias($alias) {
+		$this->current_call = __FUNCTION__;
 		$this->alias = $alias;
 		return $this;
 	}
@@ -911,6 +951,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function name($name) {
+		$this->current_call = __FUNCTION__;
 		$this->name = $name;
 		return $this;
 	}
@@ -926,6 +967,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function comment($text) {
+		$this->current_call = __FUNCTION__;
 		$this->name = $text;
 		return $this;
 	}
@@ -941,6 +983,7 @@ class x²sql {
 	 * @access public
 	 */
 	public function union($set) {
+		$this->current_call = __FUNCTION__;
 		$cfg = new stdClass();
 		$cfg->no_alias = true;
 		$cfg->no_brackets = true;
@@ -1217,8 +1260,21 @@ class x²order extends x²base {
 		if ("asc" != strtolower($direction) && "desc" != strtolower($direction) && $direction !== "")
 			throw new Exception(__CLASS__ . "->direction must be 'asc' 'desc' or emptyString");
 		parent::__construct($value, $direction);
-		$this->display = x²sql::escape($value,x²sql::esc_key)
+		$this->display = x²sql::escape($value, x²sql::esc_key)
 				. ($this->alias ? " " . $this->alias : "");
+	}
+
+}
+
+class x²operator {
+
+	public $value;
+
+	public function __construct($operator) {
+		if (!preg_match(x²sql::regex_operators, $operator))
+			throw new Exception(__CLASS__ . " no valid operator");
+		$this->value = $operator;
+		$this->display = $operator;
 	}
 
 }
