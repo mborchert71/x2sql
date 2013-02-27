@@ -797,7 +797,7 @@ class x²sql {
 		}
 		$cfg = new stdClass();
 		$cfg->no_alias = true;
-		$this->command.= $this->last_append = $this->complode($set, $cfg);
+		$this->command.= $this->last_append = " values". $this->complode($set, $cfg);
 		return $this;
 	}
 

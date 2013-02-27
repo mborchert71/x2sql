@@ -58,7 +58,7 @@ class _x²sql extends UnitTestCase {
 		$this->stack[20] = "test_alias";
 		$this->stack[21] = "test_name";
 		$this->stack[22] = "test_comment";
-		$this->stack[23] = "test_union";
+		$this->stack[23] = "test_union";//ok
 	}
 
 	/**
@@ -205,6 +205,7 @@ class _x²sql extends UnitTestCase {
 		$c = x²sql::esc_non;
 		$t = x²sql::tokenizer;
 		$in = array(
+			array("*","c"),
 			null, "",
 			true, false,
 			234, 4e-1, 0x44,
@@ -220,6 +221,7 @@ class _x²sql extends UnitTestCase {
 			new x²func("count", 0)
 		);
 		$out = array(
+			"select *,{$k}c{$k}",
 			"select *", "select *",
 			"select {$k}1{$k}", "select {$k}0{$k}",
 			"select {$k}234{$k}", "select {$k}0.4{$k}", "select {$k}68{$k}",
@@ -470,19 +472,19 @@ class _x²sql extends UnitTestCase {
 			new x²func("convert", array("\u034", "utf8"), "alias")
 		);
 		$out = array(
-			"({$s}col{$s})",
-			"(?)", "(:tok)",
-			"({$s}id{$s},{$s}name{$s},{$s}value{$s})",
-			"(?)",
-			"({$k}id{$k})",
-			"({$s}id{$s})",
-			"(" . x²sql::null_string . ")",
-			"(1)", "(0)",
-			"(234)", "(0.4)", "(68)",
-			"(456.325)",
-			"(1)",
-			"(12)",
-			"(convert('\u034','utf8'))"
+			" values({$s}col{$s})",
+			" values(?)", " values(:tok)",
+			" values({$s}id{$s},{$s}name{$s},{$s}value{$s})",
+			" values(?)",
+			" values({$k}id{$k})",
+			" values({$s}id{$s})",
+			" values(" . x²sql::null_string . ")",
+			" values(1)", " values(0)",
+			" values(234)", " values(0.4)", " values(68)",
+			" values(456.325)",
+			" values(1)",
+			" values(12)",
+			" values(convert('\u034','utf8'))"
 		);
 		//expect pass
 		$this->assertEqual(count($in), count($out));
