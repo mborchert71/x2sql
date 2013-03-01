@@ -5,17 +5,16 @@
  *
  * An open source SQL-generator-class.
  * Inspired by the database-driver in Code-igniter http://ellislab.com/codeigniter.
- *
+ *   if (get_magic_quotes_gpc()) {        $value = stripslashes($value);    }
  * @package		x²sql
  * @author		mborchert
  * @copyright           Copyright (c) 2013.
  * @license		http://creativecommons.org/licenses/by/3.0/deed.de
  * @link		http://get-resource.net/app/php/x²sql
  * @since		Version 1.0
- * @todo: join  intersect
+ * @todo: join
  * @todo: support special settings : distinct, etc.
  * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow,array_position
- * @todo: xml2sql
  */
 // ------------------------------------------------------------------------
 
@@ -375,7 +374,7 @@ class x²sql {
 				case self::x²key :
 					if ($class === self::x²string && !strlen($set->value)
 					) {
-						throw new Exception(__CLASS__ . "->complode emptyString not allowed");
+						return self::esc_string.self::esc_string;
 					}
 					if (@$cfg->escape) {
 						return x²sql::escape($set->value, $cfg->escape)
