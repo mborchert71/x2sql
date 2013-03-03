@@ -488,7 +488,6 @@ class _x²sql extends UnitTestCase {
 		}
 		//expect fail
 		$in = array(
-			"",
 			true, false,
 			234, 4e-1, 0x44,
 			456.325,
