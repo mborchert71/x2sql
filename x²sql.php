@@ -250,6 +250,7 @@ class x²sql {
 							->comment(@$cfg->comment)
 							->select($cfg->select)
 							->from($cfg->from)
+							->union(@$cfg->union)
 							->where(@$cfg->where)
 							->having(@$cfg->having)
 							->group(@$cfg->group)
@@ -891,6 +892,28 @@ class x²sql {
 
 	/**
 	 * 
+	 * Additional information for the Statement
+	 *
+	 * @param $name
+	 *
+	 * @return x²sql $this
+	 *
+	 * @access public
+	 */
+	public function union($set) {
+		$this->current_call = __FUNCTION__;
+		if ($set === null)
+			return $this;
+		$cfg = new stdClass();
+		$cfg->delimiter = " union ";
+		$cfg->no_alias = true;
+		$cfg->no_brackets = true;
+		$this->command.= $this->last_append = " union " . $this->complode($set, $cfg);
+		return $this;
+	}
+
+	/**
+	 * 
 	 * The PDO fetch-method as string
 	 *
 	 * @param $fetch
@@ -968,25 +991,6 @@ class x²sql {
 	public function comment($text) {
 		$this->current_call = __FUNCTION__;
 		$this->name = $text;
-		return $this;
-	}
-
-	/**
-	 * 
-	 * Additional information for the Statement
-	 *
-	 * @param $name
-	 *
-	 * @return x²sql $this
-	 *
-	 * @access public
-	 */
-	public function union($set) {
-		$this->current_call = __FUNCTION__;
-		$cfg = new stdClass();
-		$cfg->no_alias = true;
-		$cfg->no_brackets = true;
-		$this->command.= $this->last_append = " union " . $this->complode($set, $cfg);
 		return $this;
 	}
 
