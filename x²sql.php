@@ -444,7 +444,7 @@ class x²sql {
 							if(!method_exists($class, "__toString"))
 								throw new Exception(__CLASS__ . "->implode unkown type");
 							else{						
-								return $this->complode(new x²string($set), $cfg);
+								return $this->complode($set->__toString(), $cfg);
 							}
 							break;
 					}
