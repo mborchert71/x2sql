@@ -331,7 +331,7 @@ class x²sql {
 					. ((@$cfg->no_brackets) ? "" : x²sql::char_bracket_close);
 		} elseif (is_object($set)) {
 			$class = get_class($set);
-			if (isset($cfg->allow) && !in_array($class, $cfg->allow)) {
+			if (isset($cfg->allow) && !in_array($class, $cfg->allow) && !method_exists($class, "__toString")) {
 				if ($class != "stdClass")
 					throw new Exception("$class is not allowed");
 			}
@@ -439,8 +439,13 @@ class x²sql {
 						case self::x²operator:
 							return $this->complode(new x²operator($set->value), $cfg);
 							break;
-						default:throw
-							new Exception(__CLASS__ . "->implode unkown type");
+						default:
+							$class = get_class($set);
+							if(!method_exists($class, "__toString"))
+								throw new Exception(__CLASS__ . "->implode unkown type");
+							else{						
+								return $this->complode(new x²string($set), $cfg);
+							}
 							break;
 					}
 					///$this->stdClass2x²class
