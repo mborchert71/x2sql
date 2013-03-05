@@ -18,6 +18,8 @@ $option->complete = false;
 $option->call = array();
 if (@$_REQUEST["call"]) {
 	$option->call = explode(",", $_REQUEST["call"]);
+}else{
+	$option->complete = true;
 }
 include_once '../x²sql.php';
 
@@ -59,6 +61,7 @@ class _x²sql extends UnitTestCase {
 		$this->stack[21] = "test_name";
 		$this->stack[22] = "test_comment";
 		$this->stack[23] = "test_union";//ok
+		$this->stack[24] = "test_x²key";//ok
 	}
 
 	/**
@@ -653,7 +656,21 @@ class _x²sql extends UnitTestCase {
 				x²sql::query()->select()->from("movies"));
 		$this->assertEqual($this->test->command, "select * from {$k}books{$k} union (select * from {$k}movies{$k})");
 	}
+	
+	function test_x²key(){
 
+		$key = new x²key(new column);
+		$this->assertEqual("columnName",$key->value);
+	}
+	function test_x²string(){
+
+		$key = new x²string(new column);
+		$this->assertEqual("columnName",$key->value);
+	}
 }
-
-//eof
+		class column {
+		public function __toString() {
+			return "columnName";
+			}
+		}
+?>

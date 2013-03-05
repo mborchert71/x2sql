@@ -1097,8 +1097,6 @@ class x²string extends x²base {
 	 * 
 	 */
 	public function __construct($value, $alias = "") {
-		if (!is_string($value))
-			throw new Exception(__CLASS__ . "->value is not string");
 		parent::__construct($value, $alias);
 	}
 
