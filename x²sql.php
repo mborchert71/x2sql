@@ -203,7 +203,12 @@ class x²sql {
 	 * @var string
 	 */
 	public $current_call;
-
+	/**
+	 * Automatic String Conversion
+	 */
+	public function __toString() {
+		return $this->command;
+	}
 	/**
 	 * reset the object for reuse
 	 */
