@@ -250,6 +250,7 @@ class x²sql {
 	public function Sql(&$cfg) {
 		$this->init_data = $cfg;
 		$cfg = $this->get_cfg_data($cfg);
+		if (isset($cfg->command)) return $this->command;
 		if (isset($cfg->select))
 			return $this->name(@$cfg->name)
 							->comment(@$cfg->comment)
@@ -386,7 +387,7 @@ class x²sql {
 						return x²sql::escape($set->value, $cfg->escape)
 								. (@$cfg->no_alias ? "" : " " . x²sql::escape($set->alias, self::esc_key) );
 					} elseif (@$cfg->no_alias) {
-						return x²sql::escape($set->value, $set->escape);
+						return (new $class($set->value))->display;
 					} else {
 						return $set->display;
 					}
@@ -751,7 +752,7 @@ class x²sql {
 		$cfg = new stdClass;
 		$cfg->no_alias = true;
 		$cfg->no_brackets = true;
-		$cfg->allow = array(self::x²key, self::x²order, self::x²string, self::x²number);
+		$cfg->allow = array(self::x²key, self::x²order, self::x²string, self::x²number, self::x²token);
 		$cfg->cast = self::x²order;
 		$this->command.= $this->last_append = " " . __FUNCTION__ . " by " . $this->complode($set, $cfg);
 		return $this;
@@ -777,17 +778,17 @@ class x²sql {
 		if (is_a($set, "x²number")) {
 			$set = $set->value;
 		}
-		if (is_numeric($set)) {
-			$this->command.= $this->last_append =
-					" " . __FUNCTION__ . " " . $this->complode(round($set));
-			return $this;
-		}
 		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placerholder) {
 			$this->command.= $this->last_append =
 					" " . __FUNCTION__ . " " . $this->complode($set);
 			return $this;
 		}
-		throw new Exception(__CLASS__ . "->limit: var is not a number");
+		if (is_numeric($set)) {
+			$this->command.= $this->last_append =
+					" " . __FUNCTION__ . " " . $this->complode(round($set));
+			return $this;
+		}		
+		throw new Exception(__CLASS__ . "->limit: $set  is not a number");
 	}
 
 	/**
@@ -807,17 +808,18 @@ class x²sql {
 		if (is_a($set, "x²number")) {
 			$set = $set->value;
 		}
-		if (is_numeric($set)) {
-			$this->command.= $this->last_append =
-					" " . __FUNCTION__ . " " . $this->complode(round($set));
-			return $this;
-		}
 		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placerholder) {
 			$this->command.= $this->last_append =
 					" " . __FUNCTION__ . " " . $this->complode($set);
 			return $this;
 		}
-		throw new Exception(__CLASS__ . "->limit: var is not a number");
+		if (is_numeric($set)) {
+			$this->command.= $this->last_append =
+					" " . __FUNCTION__ . " " . $this->complode(round($set));
+			return $this;
+		}
+		$set*=1;
+		throw new Exception(__CLASS__ . "->offset: var is not a number");
 	}
 
 	///integer-group
@@ -1132,7 +1134,9 @@ class x²key extends x²base {
 		
 		if(is_array($value)){
 			foreach($value as $i => $_){
+				if( !(is_object($_) && $_->type == x²sql::x²operator && $_->value =="*"))
 				$value[$i]=x²sql::escape($_, x²sql::esc_key);
+				else $value[$i] = "*";
 				}
 			$value   = implode(".",$value);
 			$this->display = $value. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
