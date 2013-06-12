@@ -21,7 +21,7 @@ if (@$_REQUEST["call"]) {
 }else{
 	$option->complete = true;
 }
-include_once '../x²sql.php';
+include_once '../php²sql';
 
 class _x²sql extends UnitTestCase {
 
