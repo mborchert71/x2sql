@@ -13,9 +13,10 @@
     </li>
 </ul>
 <pre>
-<?php include 'x²sql.php';
+<?php include 'php²sql';
 
 print x²sql::query()->select()->from("table")->limit(100)->offset("?")->command;
+
 print "<br/>";
 
 $cfg = json_decode('{

@@ -510,7 +510,7 @@ class x²sql {
 
 			if (trim($esc)) {
 				$ndl[] = "/" . $esc . "/";
-				$rep[] = "$esc";
+				$rep[] = $esc === self::esc_key ?  $esc.$esc : "\\".$esc;
 			}
 			return $esc . preg_replace($ndl, $rep, $str) . $esc;
 		} else {
@@ -1062,8 +1062,6 @@ class x²base {
 	public function __construct($value, $alias = "") {
 		$this->value = $value;
 		$this->alias = $alias;
-		$this->display = x²sql::escape($value, x²sql::esc_string)
-				. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 	}
 
 }
@@ -1108,6 +1106,8 @@ class x²string extends x²base {
 	 */
 	public function __construct($value, $alias = "") {
 		parent::__construct($value, $alias);
+		$this->display = x²sql::escape($value, x²sql::esc_string)
+				. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 	}
 
 }
@@ -1127,12 +1127,25 @@ class x²key extends x²base {
 	 * 
 	 */
 	public function __construct($value, $alias = "") {
+		
+		parent::__construct($value, $alias);
+		
+		if(is_array($value)){
+			foreach($value as $i => $_){
+				$value[$i]=x²sql::escape($_, x²sql::esc_key);
+				}
+			$value   = implode(".",$value);
+			$this->display = $value. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
+			}
+		else{			
+
+			$this->display = x²sql::escape($value, x²sql::esc_key)
+				. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
+		}
+		
 		if (preg_match("/\s/", $value))
 			throw new Exception(__CLASS__ . "->value space is not allowed");
-		parent::__construct($value, $alias);
-		$this->display = x²sql::escape($value, x²sql::esc_key)
-				. ($this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
-		;
+
 	}
 
 }
