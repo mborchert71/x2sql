@@ -250,7 +250,11 @@ class x²sql {
 	public function Sql(&$cfg) {
 		$this->init_data = $cfg;
 		$cfg = $this->get_cfg_data($cfg);
-		if (isset($cfg->command)) return $this->command;
+		if (isset($cfg->command)){
+							$_ = explode(" ",trim($cfg->command));
+						  $this->command_type = array_shift($_);
+							$this->command=$cfg->command;
+							return $this;}
 		if (isset($cfg->select))
 			return $this->name(@$cfg->name)
 							->comment(@$cfg->comment)
