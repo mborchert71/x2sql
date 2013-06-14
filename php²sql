@@ -103,6 +103,10 @@ class x²sql {
 	/**
 	 * 
 	 */
+	const x²math = "x²math";
+	/**
+	 * 
+	 */
 	const char_list_delimiter = ",";
 	/**
 	 * 
@@ -119,6 +123,13 @@ class x²sql {
 	 * @var str  name
 	 */
 	public $name;
+	
+	/**
+	 * Introduced for set() a statement and a update-part
+	 * 
+	 * @var str  name
+	 */
+	private $flag;
 
 	/**
 	 * Obligated in use of Subqueries
@@ -207,7 +218,8 @@ class x²sql {
 	 * Automatic String Conversion
 	 */
 	public function __toString() {
-		return $this->command;
+		return (is_array($this->command))
+		? implode("\n",$this->command) : $this->command;
 	}
 	/**
 	 * reset the object for reuse
@@ -251,42 +263,52 @@ class x²sql {
 		$this->init_data = $cfg;
 		$cfg = $this->get_cfg_data($cfg);
 		if (isset($cfg->command)){
-							$_ = explode(" ",trim($cfg->command));
-						  $this->command_type = array_shift($_);
-							$this->command=$cfg->command;
-							return $this;}
+						$_ = explode(" ",trim($cfg->command));
+						$this->command_type = array_shift($_);
+						$this->command=$cfg->command;
+			return $this;}
 		if (isset($cfg->select))
 			return $this->name(@$cfg->name)
-							->comment(@$cfg->comment)
-							->select($cfg->select)
-							->from($cfg->from)
-							->union(@$cfg->union)
-							->where(@$cfg->where)
-							->having(@$cfg->having)
-							->group(@$cfg->group)
-							->order(@$cfg->order)
-							->limit(@$cfg->limit)
-							->offset(@$cfg->offset)
-							->fetch(@$cfg->fetch)
-							->fetch_type(@$cfg->fetch_type)
-							->alias(@$cfg->alias);
+						->comment(@$cfg->comment)
+						->select($cfg->select)
+						->from(@$cfg->from)
+						->union(@$cfg->union)
+						->where(@$cfg->where)
+						->having(@$cfg->having)
+						->group(@$cfg->group)
+						->order(@$cfg->order)
+						->limit(@$cfg->limit)
+						->offset(@$cfg->offset)
+						->fetch(@$cfg->fetch)
+						->fetch_type(@$cfg->fetch_type)
+						->alias(@$cfg->alias);
 		if (isset($cfg->insert))
 			return $this->name(@$cfg->name)
-							->comment(@$cfg->comment)
-							->insert($cfg->insert)
-							->columns($cfg->columns)
-							->values($cfg->values);
+						->comment(@$cfg->comment)
+						->insert($cfg->insert)
+						->columns($cfg->columns)
+						->values($cfg->values);
 		if (isset($cfg->update))
 			return $this->name(@$cfg->name)
-							->comment(@$cfg->comment)
-							->update($cfg->update)
-							->set($cfg->set)
-							->where($cfg->where);
+						->comment(@$cfg->comment)
+						->update($cfg->update)
+						->set($cfg->set)
+						->where($cfg->where);
 		if (isset($cfg->delete))
 			return $this->name(@$cfg->name)
-							->comment(@$cfg->comment)
-							->delete($cfg->delete)
-							->where($cfg->where);
+						->comment(@$cfg->comment)
+						->delete($cfg->delete)
+						->where($cfg->where);
+		if (isset($cfg->transaction))
+			return $this->name(@$cfg->name)
+						->comment(@$cfg->comment)
+						->transaction($cfg->transaction);
+		if (isset($cfg->set))
+			return $this->name(@$cfg->name)
+						->comment(@$cfg->comment)
+						->flag("command")
+						->set($cfg->set)
+						->unflag();
 	}
 
 	/**
@@ -304,7 +326,14 @@ class x²sql {
 			return $this->Sql($cfg);
 		}
 	}
-
+	public function flag($hint){
+		$this->flag = $hint;
+		return $this;
+	}
+	public function unflag(){
+		$this->flag = null;
+		return $this;
+	}
 	/**
 	 * Static access to a new x²sql instance.
 	 * Helpful for PHP-Version prior to 5.4.
@@ -396,7 +425,7 @@ class x²sql {
 						return $set->display;
 					}
 					break;
-				case self::x²order:case self::x²operator:
+				case self::x²order:case self::x²operator:case self::x²math:
 					return $set->display;
 					break;
 				case self::x²func:
@@ -448,6 +477,9 @@ class x²sql {
 							break;
 						case self::x²operator:
 							return $this->complode(new x²operator($set->value), $cfg);
+							break;
+						case self::x²math:
+							return $this->complode(new x²math($set->value), $cfg);
 							break;
 						default:
 							$class = get_class($set);
@@ -891,17 +923,38 @@ class x²sql {
 		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
-		$this->command.=" " . __FUNCTION__ . " ";
-		if (!is_array($set) && !is_object($set))
-			throw new Exception("set input must be iteratable array or object");
-		$cfg = new stdClass;
-		$cfg->no_alias = true;
-		$tmp = array();
-		foreach ($set as $key => $val) {
-			$tmp[$key] = self::escape($key, self::esc_key);
-			$tmp[$key].= "=";
-			$tmp[$key].= $this->complode($val, $cfg);
+		
+		if($this->flag){
+			$this->command_type = __FUNCTION__;
+			$this->command = __FUNCTION__ . " ";		
 		}
+		else{
+			$this->command.=" " . __FUNCTION__ . " ";
+		}
+		
+			if (!is_array($set) && !is_object($set)) 
+				throw new Exception("set input must be iteratable array or object");
+			
+			$cfg = new stdClass;
+			$cfg->no_alias = true;
+			$tmp = array();
+
+		if($this->flag){
+			foreach ($set as $key => $val) {
+				$tmp[$key] = preg_replace('/[^a-z0-9_@$]/i', '', $key);
+				$tmp[$key].= "=";
+				$tmp[$key].= "(".$this->complode($val, $cfg).")";
+				}		
+		}
+		else{
+			foreach ($set as $key => $val) {
+				$tmp[$key] = self::escape($key, self::esc_key);
+				$tmp[$key].= "=";
+				$tmp[$key].= $this->complode($val, $cfg);
+				}
+		}
+
+		
 		$this->command.= $this->last_append = implode(self::char_list_delimiter, $tmp) . " ";
 		return $this;
 	}
@@ -927,7 +980,31 @@ class x²sql {
 		$this->command.= $this->last_append = " union " . $this->complode($set, $cfg);
 		return $this;
 	}
+	/**
+	 * 
+	 * transaction
+	 *
+	 * @param $set
+	 *
+	 * @return x²sql $this
+	 *
+	 * @access public
+	 */
+	public function transaction($set){
+		if(!is_array($set))return $this;
+	  $this->command_type = __FUNCTION__;
+		$this->command = array();
+		foreach ($set as $key =>  $statement){
+			$x²sql = new x²sql($statement);
+			if($x²sql->prepare){
+				$this->prepare = true;
+				$this->bind->$key = $x²sql->bind;
+			}
+			$this->command[]= $this->last_append = $x²sql->command.";";
+		}
 
+		return $this;
+	}	
 	/**
 	 * 
 	 * The PDO fetch-method as string
@@ -1009,9 +1086,10 @@ class x²sql {
 		$this->name = $text;
 		return $this;
 	}
+	
+
 
 }
-
 /**
  * 
  * Helper Class, to generate function statements.
@@ -1047,7 +1125,6 @@ class x²func {
 	}
 
 }
-
 /**
  * 
  * Avoid string escaping and mark the statement to be prepared
@@ -1071,7 +1148,6 @@ class x²base {
 	}
 
 }
-
 /**
  * 
  * Avoid string escaping and mark the statement to be prepared
@@ -1097,7 +1173,6 @@ class x²token extends x²base {
 	}
 
 }
-
 /**
  * 
  * for completeness
@@ -1117,7 +1192,6 @@ class x²string extends x²base {
 	}
 
 }
-
 /**
  * 
  * force database-keyword escaping: columns, tablenames, databasename.
@@ -1157,7 +1231,6 @@ class x²key extends x²base {
 	}
 
 }
-
 /**
  * 
  * Allow 'true' and 'false' string to be recognized as booleans
@@ -1192,7 +1265,6 @@ class x²bool extends x²base {
 	}
 
 }
-
 /**
  * 
  * skip string escaping, if it is a valid number of course.
@@ -1228,7 +1300,6 @@ class x²number extends x²base {
 	}
 
 }
-
 /**
  * 
  * Allow string 'null' to be handled as PHP/DB null.
@@ -1258,7 +1329,6 @@ class x²null extends x²base {
 	}
 
 }
-
 /**
  * 
  * Allow string 'null' to be handled as PHP/DB null.
@@ -1298,7 +1368,7 @@ class x²order extends x²base {
 
 }
 
-class x²operator {
+class x²operator extends x²base {
 
 	public $value;
 
@@ -1307,6 +1377,19 @@ class x²operator {
 			throw new Exception(__CLASS__ . " no valid operator");
 		$this->value = $operator;
 		$this->display = $operator;
+	}
+
+}
+
+class x²math extends x²base {
+	const regex_math = "/(:=|\|\||OR|XOR|&&|AND|NOT|BETWEEN|CASE|WHEN|THEN|ELSE|=|<=>|>=|<=|<|<>|>|!=|IS|LIKE|REGEXP|IN|\||&|<<|>>|-|\+|\*|\/|DIV|%|MOD|^|~|!|BINARY|COLLATE)/i";
+	public $value;
+
+	public function __construct($math) {
+		if(preg_match("/[^\s0-9\.\*+-\/=<>!&%~\(\)]/",$math))
+			throw new Exception(__CLASS__ . " no valid math expression");
+		$this->value = str_replace(array(" ","\n","\r","\t"),"",$math);
+		$this->display = $math;
 	}
 
 }

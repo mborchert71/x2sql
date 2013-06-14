@@ -6,7 +6,7 @@ $class = "x2sql";
 $describe = " * The test drive for an open source SQL-generator-class
  * Using the http://simpletest.org/ test-engine.";
 $author = "m.borchert";
-$license = "http://creativecommons.org/licenses/by/3.0/deed.de";
+$license = "GPL GNU PuBLIC LicenSE";
 $link = "http://get-resource.net/app/php/x2sql";
 $since = "Version 1.0";
 
