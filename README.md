@@ -42,8 +42,6 @@ itself and so be able to easily port it later on.
 
 x²sql make use of the [SimpleTestEngine](http://simpletest.org).
 
-
-feel free to fork and improve.
 this is my little todo-list;
 
  + 'join' and 'union'.
