@@ -42,6 +42,31 @@ class x²sql {
 	const char_bracket_open = "(";
 	const char_bracket_close = ")";
 
+//4 serializing the const above. 
+	public $tokenizer = ":";
+	public $placerholder = "?";
+	public $esc_string = "'";
+	public $esc_key = "`";
+	public $esc_non = "";
+	public $esc_num = "";
+	public $null_string = "null";
+	public $regex_operators = "/^(:=|\|\||OR|XOR|&&|AND|NOT|BETWEEN|CASE|WHEN|THEN|ELSE|=|<=>|>=|<=|<|<>|>|!=|IS|LIKE|REGEXP|IN|\||&|<<|>>|-|\+|\*|\/|DIV|%|MOD|^|~|!|BINARY|COLLATE)$/i";
+	public $x²sql = "x²sql";
+	public $x²null = "x²null";
+	public $x²bool = "x²bool";
+	public $x²number = "x²number";
+	public $x²string = "x²string";
+	public $x²func = "x²func";
+	public $x²token = "x²token";
+	public $x²place = "x²place";
+	public $x²key = "x²key";
+	public $x²order = "x²order";
+	public $x²operator = "x²operator";
+	public $x²math = "x²math";
+	public $char_list_delimiter = ",";
+	public $char_bracket_open = "(";
+	public $char_bracket_close = ")";
+
 	private $flag;
 	public $__name;
 	public $comment;

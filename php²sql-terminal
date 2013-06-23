@@ -1,0 +1,21 @@
+<?php
+
+include "php²sql";
+
+if($argc<1) die($usage="error: usage:\ncphp php²sql-terminal json-object");
+
+
+unset($argv[0]);
+
+$query =  is_file($argv[1])
+		? file_get_contents($argv[1]) 
+		: str_replace(	array("\\,","\\{","\\}"),
+						array(",","{","}"),
+						stripslashes(implode("",$argv)));
+
+$request = json_decode($query);
+if(is_object($request))
+print json_encode(x²sql::query($request));
+else print "error: no valid json-query, do not use '\"' and ',' "; 
+
+?>
