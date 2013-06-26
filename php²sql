@@ -66,7 +66,6 @@ class x²sql {
 	public $char_list_delimiter = ",";
 	public $char_bracket_open = "(";
 	public $char_bracket_close = ")";
-
 	private $flag;
 	public $__name;
 	public $comment;
@@ -117,15 +116,16 @@ class x²sql {
 		$this->init_data = $cfg;
 		$cfg = $this->get_cfg_data($cfg);
 		if (isset($cfg->command)) {
-			if(is_string($cfg->command)){
-				$_ = explode(" ",$cfg->command);
-				$this->command_type =  array_shift($_);
-			}else{
-			$this->command_type = $cfg->command[0];
-			foreach($cfg->command as &$c){
-				if(is_object($c) || is_array($c)) $c = $this->complode($c);
-			}
-			$this->command = implode(" ",$cfg->command);
+			if (is_string($cfg->command)) {
+				$_ = explode(" ", $cfg->command);
+				$this->command_type = array_shift($_);
+			} else {
+				$this->command_type = $cfg->command[0];
+				foreach ($cfg->command as &$c) {
+					if (is_object($c) || is_array($c))
+						$c = $this->complode($c);
+				}
+				$this->command = implode(" ", $cfg->command);
 			}
 			return $this;
 		}
@@ -143,7 +143,7 @@ class x²sql {
 											->offset(@$cfg->offset)
 											->fetch(@$cfg->fetch)
 											->fetch_type(@$cfg->fetch_type)
-											->alias(@$cfg->alias,$cfg);
+											->alias(@$cfg->alias, $cfg);
 		if (isset($cfg->insert))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
@@ -265,11 +265,11 @@ class x²sql {
 					) {
 						return self::esc_string . self::esc_string;
 					}
-					if (@$cfg->escape) {
+					if (@$cfg->escape && $cfg->escape != $set->escape) {
 						return x²sql::escape($set->value, $cfg->escape)
 										. (@$cfg->no_alias ? "" : " " . x²sql::escape($set->alias, self::esc_key) );
 					} elseif (@$cfg->no_alias) {
-						return (new $class($set->value,""))->display;
+						return (new $class($set->value, ""))->display;
 					} else {
 						return $set->display;
 					}
@@ -347,6 +347,8 @@ class x²sql {
 			$class = @$cfg->cast ? $cfg->cast : "x²number";
 			return $this->complode(new $class($set), $cfg);
 		} elseif (is_string($set)) {
+			if ($this->current_call == "select" && $set == "*")
+				return "*";
 
 			if ($this->current_call == "where" || $this->current_call == "having")
 				if (preg_match(self::regex_operators, $set) && (@$cfg->array_position & 1))
@@ -660,19 +662,19 @@ class x²sql {
 		return $this;
 	}
 
-	public function alias($set,$cfg=null) {
-		
+	public function alias($set, $cfg = null) {
+
 		$this->current_call = __FUNCTION__;
-		if ($set === null || $set==x²sql::null_string || $set ==="")
+		if ($set === null || $set == x²sql::null_string || $set === "")
 			return $this;
-		
-		$o =x²sql::char_bracket_open; 
-		$c=x²sql::char_bracket_close; 
+
+		$o = x²sql::char_bracket_open;
+		$c = x²sql::char_bracket_close;
 
 		$afg = new stdClass;
-		$afg->cast=x²sql::x²key;
+		$afg->cast = x²sql::x²key;
 		$afg->no_brackets = true;
-		$this->command= $this->last_append = $o.$this->command.$c.(@$cfg->no_alias?"":" ".$this->complode($set,$afg));
+		$this->command = $this->last_append = $o . $this->command . $c . (@$cfg->no_alias ? "" : " " . $this->complode($set, $afg));
 
 		return $this;
 	}
@@ -709,7 +711,7 @@ class x²sql {
 	public function plock(&$set) {
 		$this->current_call = __FUNCTION__;
 		$create_pl_block = x²plock::{$set->create}($set);
-		foreach($create_pl_block->bind as $key => $obj){
+		foreach ($create_pl_block->bind as $key => $obj) {
 			$this->bind->{$key} = $obj;
 		}
 		$this->command.= $this->last_append = " " . $create_pl_block->command;
@@ -748,7 +750,8 @@ class x²plock {
 			throw new Exception("x²plock::view has no create 'as' param");
 		$as = $cfg->as;
 		$as->type = x²sql::x²sql;
-		$sql = new x²sql($as);$sql->command = "as  ".$sql->command;
+		$sql = new x²sql($as);
+		$sql->command = "as  " . $sql->command;
 		return $sql;
 	}
 
@@ -826,27 +829,26 @@ class x²key extends x²base {
 	public function __construct($value, $alias = "") {
 
 		parent::__construct($value, $alias);
-
+		$display = [];
 		if (is_array($value)) {
-			foreach ($value as $i => $_) {
-				if (!(is_object($_) && $_->type == x²sql::x²operator && $_->value == "*"))
-					$value[$i] = x²sql::escape($_, x²sql::esc_key);
-				else
-					$value[$i] = "*";
+			foreach ($value as $i => &$_) {
+				if ($_ != "*") {
+					if (preg_match("/\s/", $_))
+						throw new Exception(__CLASS__ . "->value space is not allowed");
+					$display[] = x²sql::escape($_, x²sql::esc_key);
+				}
 			}
-			$value = implode(".", $value);
-			$this->display = $value . (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
+			$this->display = implode(".", $display) . (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 		}
 		else if ($value == null) {
 			$this->display = "";
 		} else {
+			if (preg_match("/\s/", $value))
+				throw new Exception(__CLASS__ . "->value space is not allowed");
 
 			$this->display = x²sql::escape($value, x²sql::esc_key)
 							. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 		}
-
-		if (preg_match("/\s/", $value))
-			throw new Exception(__CLASS__ . "->value space is not allowed");
 	}
 
 }
@@ -909,11 +911,15 @@ class x²place extends x²base {
 class x²order extends x²base {
 
 	public function __construct($value, $direction = "") {
+		parent::__construct($value, $direction);
 		if ("asc" != strtolower($direction) && "desc" != strtolower($direction) && $direction !== "")
 			throw new Exception(__CLASS__ . "->direction must be 'asc' 'desc' or emptyString");
 		parent::__construct($value, $direction);
-		$this->display = x²sql::escape($value, x²sql::esc_key)
-						. (strlen($this->alias) ? " " . $this->alias : "");
+		if(is_a($value, "x²key")){
+			$this->value   = $value->value;
+		}
+		$this->display = x²sql::escape($this->value, x²sql::esc_key)
+						. (strlen($direction) ? " " . $direction : "");
 	}
 
 }
@@ -938,12 +944,23 @@ class x²math extends x²base {
 	public $value;
 
 	public function __construct($math) {
-		if (preg_match("/[^\s0-9\.\*+-\/=<>!&%~\(\)]/", $math))
-			throw new Exception(__CLASS__ . " no valid math expression");
-		$this->value = str_replace(array(" ", "\n", "\r", "\t"), "", $math);
-		$this->display = $math;
-	}
+		parent::__construct($math);
+	
+		$this->display =$this-> prepro($math);
 
+	}
+		function prepro(&$m){
+
+			if(is_array($m)) {
+			foreach($m as $k => $_) $m[$k]= $this->prepro($_) ;
+			return "(".implode("",$m).")";
+			}
+			else if (is_a($m,"x²key") ) return $m->display; //|| is_a($m,"x²func")todo
+			else if (!is_object($m) && preg_match("/[^\s0-9\.\*+-\/=<>!&%~\(\)]/", $m))
+			throw new Exception(__CLASS__ . "$m no valid math expression");
+			if(!trim($m))return "+";
+			return $m;
+			}	
 }
 
 ?>

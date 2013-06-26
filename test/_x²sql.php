@@ -343,7 +343,7 @@ class _x²sql extends UnitTestCase {
 				"$word (({$k}x{$k} < {$n}3{$n}) and (1 <> {$n}3{$n}))", $this->test->$call(array(array(new x²key("x"), "<", 3), "and", array(true, "<>", 3)))->last_append, "%s");
 		$this->assertEqual("$word (({$k}table{$k}.{$k}schema_name{$k} = schema()) and ({$k}table_name{$k} = :table))",
 			$this->test->$call( 
-										[[ new x²key(["table","schema_name"]),"=",new x²func("schema")]
+										[ [ new x²key(["table","schema_name"]),"=",new x²func("schema")]
 										,"and",
 										[ new x²key("table_name"),"=",":table" ]])->last_append, "%s");
 				
