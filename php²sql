@@ -124,9 +124,9 @@ class x²sql {
 				foreach ($cfg->command as &$c) {
 					if (is_object($c) || is_array($c))
 						$c = $this->complode($c);
-				}
-				$this->command = implode(" ", $cfg->command);
+				}	
 			}
+			$this->command = implode(" ", $cfg->command);
 			return $this;
 		}
 		if (isset($cfg->select))
@@ -397,6 +397,7 @@ class x²sql {
 
 	public function select($set = "*") {
 		$this->current_call = __FUNCTION__;
+
 		if (!$this->command_type)
 			$this->command_type = __FUNCTION__;
 		if ($set === "" || $set === null || $set === "*") {
@@ -455,7 +456,7 @@ class x²sql {
 		return $this;
 	}
 
-	public function where($set) {
+	public function where($set,$dropword=false) {
 		$this->current_call = __FUNCTION__;
 		if ($set === null)
 			return $this;
@@ -465,7 +466,7 @@ class x²sql {
 		$cfg = new stdClass;
 		$cfg->delimiter = " ";
 		$cfg->no_alias = true;
-		$this->command.= $this->last_append = " " . __FUNCTION__ . " " . $this->complode($set, $cfg);
+		$this->command.= $this->last_append = " " . ($dropword?"":__FUNCTION__) . " " . $this->complode($set, $cfg);
 		return $this;
 	}
 
@@ -745,7 +746,7 @@ class x²sql {
 class x²plock {
 
 	public static function view(&$cfg) {
-		//create :view :name :as (x²sql:select  :for);
+		//create :view :name :as (x²sql:select  :from);
 		if (!isset($cfg->as))
 			throw new Exception("x²plock::view has no create 'as' param");
 		$as = $cfg->as;
