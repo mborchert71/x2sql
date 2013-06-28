@@ -836,7 +836,7 @@ class x²key extends x²base {
 					if (preg_match("/\s/", $_))
 						throw new Exception(__CLASS__ . "->value space is not allowed");
 					$display[] = x²sql::escape($_, x²sql::esc_key);
-				}
+				}else $display[] = "*";
 			}
 			$this->display = implode(".", $display) . (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 		}
