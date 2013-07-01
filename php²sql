@@ -27,7 +27,7 @@
 class x²sql {
 
 	const tokenizer = ":";
-	const placerholder = "?";
+	const placeholder = "?";
 	const esc_string = "'";
 	const esc_key = "`";
 	const esc_non = "";
@@ -52,7 +52,7 @@ class x²sql {
 
 //4 serializing the const above. 
 	public $tokenizer = ":";
-	public $placerholder = "?";
+	public $placeholder = "?";
 	public $esc_string = "'";
 	public $esc_key = "`";
 	public $esc_non = "";
@@ -237,7 +237,7 @@ class x²sql {
 					$counter = $this->bind_count++;
 					$this->bind->$counter = new stdClass();
 					$this->bind->$counter->bind = "Param";
-					$this->bind->$counter->key = self::placerholder;
+					$this->bind->$counter->key = self::placeholder;
 					$this->bind->$counter->type = PDO::PARAM_STR;
 					$this->bind->$counter->value = self::null_string;
 					if (@$cfg->no_alias) {
@@ -361,7 +361,7 @@ class x²sql {
 			if ($this->current_call == "where" || $this->current_call == "having")
 				if (preg_match(self::regex_operators, $set) && (@$cfg->array_position & 1))
 					return $set;
-			if ($set == self::placerholder) {
+			if ($set == self::placeholder) {
 				return $this->complode(new x²place($set), $cfg);
 			} elseif (substr($set, 0, 1) == self::tokenizer) {
 				return $this->complode(new x²token(substr($set, 1)), $cfg);
@@ -379,7 +379,7 @@ class x²sql {
 			return self::null_string;
 		} elseif (is_bool($str))
 			return $str ? $esc . "1" . $esc : $esc . "0" . $esc;
-		elseif ($str === self::placerholder)
+		elseif ($str === self::placeholder)
 			return $str;
 		elseif (is_numeric($str))
 			return $esc . $str . $esc;
@@ -533,7 +533,7 @@ class x²sql {
 		if (is_a($set, "x²number")) {
 			$set = $set->value;
 		}
-		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placerholder) {
+		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placeholder) {
 			$this->command.= $this->last_append =
 							" " . __FUNCTION__ . " " . $this->complode($set);
 			return $this;
@@ -553,7 +553,7 @@ class x²sql {
 		if (is_a($set, "x²number")) {
 			$set = $set->value;
 		}
-		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placerholder) {
+		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placeholder) {
 			$this->command.= $this->last_append =
 							" " . __FUNCTION__ . " " . $this->complode($set);
 			return $this;
@@ -917,8 +917,8 @@ class x²place extends x²base {
 	public $escape = x²sql::esc_non;
 
 	public function __construct($value = null, $alias = "") {
-		parent::__construct(x²sql::placerholder, $alias);
-		$this->display = x²sql::placerholder
+		parent::__construct(x²sql::placeholder, $alias);
+		$this->display = x²sql::placeholder
 						. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 	}
 
