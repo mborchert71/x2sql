@@ -6,6 +6,14 @@
  * An open source SQL-generator-class.
  * Inspired by the database-driver in Code-igniter http://ellislab.com/codeigniter.
  *   if (get_magic_quotes_gpc()) {        $value = stripslashes($value);    }
+ * 
+ * x²func redo ... text to display .. funcname to x²key alias to x²key
+ * 2 ways . 1.standalone strictmode . every argument explicit or string escaped if not number
+ *          2.relaxed mode lazy ... oder in  den x²s die ganzen kreuzauflösungen schon vornehmen ...
+ *  dürfte auch complode um einiges schlanker machen ...  oh man seit ? monaten ... langsam hängt mir das wider trotz pausen zum hals raus ...
+ *  ja ich weiss immer geschoben .. func war zuerst und dann x²base und nicht angepasst ... weil noch so viel zu tun war, was wichtiger war...
+ *  immer wieder die selben fallen ... oder hindernisse...
+ * 
  * @package		x²sql
  * @author		mborchert
  * @copyright           Copyright (c) 2013.
@@ -286,7 +294,7 @@ class x²sql {
 									. self::char_bracket_open
 									. implode(self::char_list_delimiter, $str)
 									. self::char_bracket_close
-									. (@$cfg->no_alias ? "" : " " . x²sql::escape($set->alias, self::esc_key) );
+									. (@$cfg->no_alias || !@$set->alias ? "" : " " . x²sql::escape($set->alias, self::esc_key) );
 					break;
 				case __CLASS__:
 					if ($set->prepare) {
@@ -424,13 +432,16 @@ class x²sql {
 
 	public function from($set) {
 		$this->current_call = __FUNCTION__;
-		if ($set === null)
+		if ($set === null || $set ==="")
 			return $this;
 		$cfg = new stdClass;
 		$cfg->cast = "x²key";
 		$cfg->allow = array(self::x²string, self::x²key, self::x²token, __CLASS__);
 		$cfg->no_brackets = true;
-		$this->command.= $this->last_append = " " . __FUNCTION__ . " " . $this->complode($set, $cfg);
+		$from = $this->complode($set, $cfg);
+		if($from =="" || $from==null) 
+			throw new exception("could not evaluate from ".print_r($from,true));
+		$this->command.= $this->last_append = " " . __FUNCTION__ . " " .$from;
 		return $this;
 	}
 
@@ -794,6 +805,10 @@ class x²base {
 		$this->value = $value;
 		$this->alias = $alias;
 	}
+	
+	public function __toString(){
+		return $this->display;
+		}
 
 }
 
