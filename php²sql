@@ -25,7 +25,8 @@
  * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow,array_position
  */
 class x²sql {
-
+	
+	const x²classlist = ",x²sql,x²sql,x²null,x²z,x²bool,x²b,x²number,x²n,x²string,x²s,x²func,x²f,x²token,x²t,x²place,x²p,x²key,x²k,x²order,x²o,x²operator,x²op,x²math,x²m,";		
 	const x²sql = "x²sql";
 	const x²null = "x²z";
 	const x²bool = "x²b";
@@ -760,31 +761,6 @@ class x²plock {
 		$sql = new x²sql($as);
 		$sql->command = "as  " . $sql->command;
 		return $sql;
-	}
-
-}
-
-class x²funct {
-
-	public $name;
-	public $alias;
-	public $argus;
-	public $text;
-
-	public function __construct($name, $argus = null, $alias = "") {
-		if (preg_match("/\s|\n|\r|\t/", $name))
-			throw new Exception(__CLASS__ . "->name must not have spaces");
-		$this->name = $name;
-		if (preg_match("/\s|\n|\r|\t/", $alias))
-			throw new Exception(__CLASS__ . "->alias must not have spaces");
-		$this->alias = $alias;
-
-		if (is_bool($argus) || is_numeric($argus) || is_string($argus) || is_object($argus)) {
-			$this->argus = array($argus);
-		} else if ($argus === null)
-			$this->argus = array();
-		else
-			$this->argus = $argus;
 	}
 
 }
