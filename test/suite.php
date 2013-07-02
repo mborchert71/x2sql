@@ -24,7 +24,7 @@ class AllTests extends TestSuite {
     function __construct() {
         parent::__construct("x²sql");
         global $dir_simpletest;
-        (new HtmlReporter("utf8"))->paintHeader("x²sql");
+   			 
         $this->addFile("_x²key.php");
         $this->addFile("_x²func.php");
         $this->addFile("_x²sql.php");
