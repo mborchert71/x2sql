@@ -25,8 +25,8 @@
  * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow,array_position
  */
 class x²sql {
-	
-	const x²classlist = ",x²sql,x²sql,x²null,x²z,x²bool,x²b,x²number,x²n,x²string,x²s,x²func,x²f,x²token,x²t,x²place,x²p,x²key,x²k,x²order,x²o,x²operator,x²op,x²math,x²m,";		
+
+	const x²classlist = ",x²sql,x²sql,x²null,x²z,x²bool,x²b,x²number,x²n,x²string,x²s,x²func,x²f,x²token,x²t,x²place,x²p,x²key,x²k,x²order,x²o,x²operator,x²op,x²math,x²m,";
 	const x²sql = "x²sql";
 	const x²null = "x²null";
 	const x²bool = "x²bool";
@@ -211,7 +211,131 @@ class x²sql {
 		return new x²sql($cfg);
 	}
 
+	static public function _scalar(&$set, &$cfg) {
+		if (is_bool($set)) {
+			$set = $set ? "1" : "0";
+			$class = @$cfg->cast ? $cfg->cast : self::x²bool;
+			return self::complode(new $class($set), $cfg);
+		} elseif (is_numeric($set)) {
+			$class = @$cfg->cast ? $cfg->cast : self::x²number;
+			return self::complode(new $class($set), $cfg);
+		} elseif (is_string($set)) {
+			if (self::$current_call == "select" && $set == "*")
+				return "*";
+			if (self::$current_call == "where" || self::$current_call == "having")
+				if (preg_match(x²operator::regex, $set) && (@$cfg->array_position & 1))
+					return $set;
+			if ($set == self::placeholder) {
+				return self::complode(new x²place($set), $cfg);
+			} elseif (substr($set, 0, 1) == self::tokenizer) {
+				return self::complode(new x²token(substr($set, 1)), $cfg);
+			} else {
+				$class = @$cfg->cast ? $cfg->cast : self::x²string;
+				return self::complode(new $class($set), $cfg);
+			}
+		} throw new Exception("you should never reach this point");
+	}
+
+	static public function _stdclass(&$set, &$cfg) {
+		switch (@$set->type) {
+			case self::x²null:
+			case self::x²bool :
+			case self::x²number :
+			case self::x²place :
+			case self::x²token :
+			case self::x²string :
+			case self::x²key :
+				$class = $set->type;
+				return self::complode(new $class($set->value, @$set->alias), $cfg);
+				break;
+			case self::x²func :
+				return self::complode(new x²func($set->value, @$set->alias, @$set->argus), $cfg);
+				break;
+			case __CLASS__:
+				return self::complode(new x²sql($set), $cfg);
+				break;
+			case self::x²order:
+				return self::complode(new x²order($set->name, @$set->direction), $cfg);
+				break;
+			case self::x²operator:
+				return self::complode(new x²operator($set->value), $cfg);
+				break;
+			case self::x²math:
+				return self::complode(new x²math($set->value), $cfg);
+				break;
+			default:
+				throw new Exception(__CLASS__ . "->implode unkown type");
+				break;
+		}
+	}
+
+	static public function _xobject(&$set, &$cfg) {
+
+		$class = get_class($set);
+		if (isset($cfg->allow) && !in_array($class, $cfg->allow) && !method_exists($class, "__toString")) {
+			if ($class != "stdClass")
+				throw new Exception("$class is not allowed");
+		}
+		switch ($class) { //$this->stringify_$class($set,$cfg); polymorphism no switch.
+			case self::x²place:
+			case self::x²token:
+				//addbondage
+				self::$prepare = true;
+				$counter = self::$bind_count++;
+				self::$bind->$counter = new stdClass();
+				self::$bind->$counter->bind = "Param";
+				self::$bind->$counter->key = $class == self::x²token ? $set->value : self::placeholder;
+				self::$bind->$counter->type = PDO::PARAM_STR;
+				self::$bind->$counter->value = self::null_string;
+				if (@$cfg->no_alias) {
+					return $class == self::x²token ? self::escape(self::tokenizer . $set->value, "") : self::escape($set->value, "");
+				}
+				else
+					return $set->display;
+				break;
+			case self::x²string : if (!strlen($set->value)) {
+					return self::esc_string . self::esc_string;
+				}//no break;
+			case self::x²null:
+			case self::x²bool :
+			case self::x²number :
+			case self::x²key : //return_by_cfg
+				if (@$cfg->escape && $cfg->escape != $set->escape) {
+					return self::escape($set->value, $cfg->escape)
+									. (@$cfg->no_alias ? "" : " " . self::escape($set->alias, self::esc_key) );
+				} elseif (@$cfg->no_alias) {
+					return (new $class($set->value, ""))->display;
+				} else {
+					return $set->display;
+				}
+				break;
+			case self::x²order:
+			case self::x²operator: return $set->display;
+				break;
+			case self::x²math:
+			case self::x²func: return @$cfg->no_alias ? $set->display_no_alias : $set->display;
+				break;
+			case __CLASS__: //addbondage
+				if (@$set->prepare) {
+					self::$prepare = true;
+					foreach ($set->bind as $key => $bind) {
+						self::$bind_count+=1;
+						self::$bind->{self::$bind_count + $set->bind_count} = $bind;
+					}
+				}
+				return $set->command;
+			default: //lax __toString
+				if (!method_exists($class, "__toString")) {
+					throw new Exception(__CLASS__ . "->implode unkown type");
+				} else {
+					return self::complode($set->__toString(), $cfg);
+				}
+				break;
+		}
+	}
+
 	static public function complode($set, $cfg = null) {
+
 		if (!$cfg)
 			$cfg = new stdClass;
 		if ($set === null) {
@@ -228,145 +352,14 @@ class x²sql {
 							. implode($delimiter, $_)
 							. ((@$cfg->no_brackets) ? "" : self::bracket_close);
 		} elseif (is_object($set)) {
-			$class = get_class($set);
-			if (isset($cfg->allow) && !in_array($class, $cfg->allow) && !method_exists($class, "__toString")) {
-				if ($class != "stdClass")
-					throw new Exception("$class is not allowed");
-			}
-			switch ($class) {
-				case self::x²place:
-					self::$prepare = true;
-					$counter = self::$bind_count++;
-					self::$bind->$counter = new stdClass();
-					self::$bind->$counter->bind = "Param";
-					self::$bind->$counter->key = self::placeholder;
-					self::$bind->$counter->type = PDO::PARAM_STR;
-					self::$bind->$counter->value = self::null_string;
-					if (@$cfg->no_alias) {
-						return self::escape($set->value, "");
-					}
-					else
-						return $set->display;
-					break;
-				case self::x²token:
-					if (2 > strlen($set->value))
-						throw new Exception(__CLASS__ . "->complode emptyToken not allowed");
-					if (preg_match("/\s/", $set->value))
-						throw new Exception(__CLASS__ . "->escape prepare-token must not have space");
-					self::$prepare = true;
-					$counter = self::$bind_count++;
-					self::$bind->$counter = new stdClass();
-					self::$bind->$counter->bind = "Param";
-					self::$bind->$counter->key = $set->value;
-					self::$bind->$counter->type = PDO::PARAM_STR;
-					self::$bind->$counter->value = self::null_string;
-					if (@$cfg->no_alias) {
-						return self::escape(self::tokenizer . $set->value, "");
-					}
-					else
-						return $set->display;
-					break;
-				case self::x²null: 
-				case self::x²bool : 
-				case self::x²number : 
-				case self::x²string : 
-				case self::x²key : 
-					if ($class === self::x²string && !strlen($set->value)
-					) {
-						return self::esc_string . self::esc_string;
-					}
-					if (@$cfg->escape && $cfg->escape != $set->escape) {
-						return self::escape($set->value, $cfg->escape)
-										. (@$cfg->no_alias ? "" : " " . self::escape($set->alias, self::esc_key) );
-					} elseif (@$cfg->no_alias) {
-						return (new $class($set->value, ""))->display;
-					} else {
-						return $set->display;
-					}
-					break;
-				case self::x²order: 
-				case self::x²operator: 
-					return $set->display;
-					break;
-				case self::x²math: 
-				case self::x²func: 
-					return @$cfg->no_alias ? $set->display_no_alias : $set->display;
-					break;
-				case __CLASS__:
-					if (@$set->prepare) {
-						self::$prepare = true;
-						foreach ($set->bind as $key => $bind) {
-							self::$bind_count+=1;
-							self::$bind->{self::$bind_count + $set->bind_count} = $bind;
-						}
-					}
-					return $set->command;
-				default:
-					if (!isset($set->type))
-						throw new Exception("$class::property:type does not exist");
-					//$this->stdClass2x²class
-					switch (@$set->type) {
-						case self::x²null: 
-						case self::x²bool : 
-						case self::x²number : 
-						case self::x²place : 
-						case self::x²token : 
-						case self::x²string : 
-						case self::x²key : 
-							$class = $set->type;
-							return self::complode(new $class($set->value, @$set->alias), $cfg);
-							break;
-						case self::x²func : 
-							return self::complode(new x²func($set->value, @$set->alias, @$set->argus), $cfg);
-							break;
-						case __CLASS__:
-							return self::complode(new x²sql($set), $cfg);
-							break;
-						case self::x²order: 
-							return self::complode(new x²order($set->name, @$set->direction), $cfg);
-							break;
-						case self::x²operator: 
-							return self::complode(new x²operator($set->value), $cfg);
-							break;
-						case self::x²math: 
-							return self::complode(new x²math($set->value), $cfg);
-							break;
-						default:
-							$class = get_class($set);
-							if (!method_exists($class, "__toString")){
-								print_r($set);
-							throw new Exception(__CLASS__ . "->implode unkown type");}
-							else {
-								return self::complode($set->__toString(), $cfg);
-							}
-							break;
-					}
-					///$this->stdClass2x²class
-					break;
-			}
-		} elseif (is_bool($set)) {
-			$set = $set ? "1" : "0";
-			$class = @$cfg->cast ? $cfg->cast : self::x²bool;
-			return self::complode(new $class($set), $cfg);
-		} elseif (is_numeric($set)) {
-			$class = @$cfg->cast ? $cfg->cast : self::x²number;
-			return self::complode(new $class($set), $cfg);
-		} elseif (is_string($set)) {
-			if (self::$current_call == "select" && $set == "*")
-				return "*";
 
-			if (self::$current_call == "where" || self::$current_call == "having")
-				if (preg_match(x²operator::regex, $set) && (@$cfg->array_position & 1))
-					return $set;
-			if ($set == self::placeholder) {
-				return self::complode(new x²place($set), $cfg);
-			} elseif (substr($set, 0, 1) == self::tokenizer) {
-				return self::complode(new x²token(substr($set, 1)), $cfg);
-			} else {
-				$class = @$cfg->cast ? $cfg->cast : self::x²string;
-				return self::complode(new $class($set), $cfg);
-			}
-		} throw new Exception("you should never reach this point");
+			if (is_a($set, "stdClass"))
+				return self::_stdclass($set, $cfg);
+			else
+				return self::_xobject($set, $cfg);
+		}
+		else
+			return self::_scalar($set, $cfg);
 	}
 
 	static public function escape($str, $esc = "", $operator = 0) {
@@ -465,7 +458,7 @@ class x²sql {
 	}
 
 	public function filter($set, $dropword = false) {
-		$cmd=self::$current_call;
+		$cmd = self::$current_call;
 		if ($set === null)
 			return $this;
 		if (!is_array($set) && !is_object($set)) {
@@ -477,13 +470,15 @@ class x²sql {
 		$this->command.= $this->last_append = " " . ($dropword ? "" : $cmd) . " " . self::complode($set, $cfg);
 		return $this;
 	}
+
 	public function where($set, $dropword = false) {
 		self::$current_call = __FUNCTION__;
-		return $this->filter($set,$dropword);
+		return $this->filter($set, $dropword);
 	}
+
 	public function having($set, $dropword = false) {
 		self::$current_call = __FUNCTION__;
-		return $this->filter($set,$dropword);
+		return $this->filter($set, $dropword);
 	}
 
 	public function group($set) {
@@ -517,27 +512,29 @@ class x²sql {
 		return $this;
 	}
 
-	public function _integer($set){
+	public function _integer($set) {
 		$cmd = self::$current_call;
 		if ($set === null)
 			return $this;
-		if (is_a($set, "x²number") || is_a($set,"x²string")) {
+		if (is_a($set, "x²number") || is_a($set, "x²string")) {
 			$set = $set->value;
 		}
 		if (is_string($set) && substr($set, 0, 1) == self::tokenizer || $set == self::placeholder) {
-			$this->command.= $this->last_append =" $cmd " . self::complode($set);
+			$this->command.= $this->last_append = " $cmd " . self::complode($set);
 			return $this;
 		}
-		if (is_numeric($set) ) {
-			$this->command.= $this->last_append =" $cmd "  . intval($set);
+		if (is_numeric($set)) {
+			$this->command.= $this->last_append = " $cmd " . intval($set);
 			return $this;
 		}
-		throw new Exception(__CLASS__ . "-> $cmd  is not a number".print_r($set,true));	
+		throw new Exception(__CLASS__ . "-> $cmd  is not a number" . print_r($set, true));
 	}
+
 	public function limit($set) {
 		self::$current_call = __FUNCTION__;
 		return $this->_integer($set);
 	}
+
 	public function offset($set) {
 		self::$current_call = __FUNCTION__;
 		return $this->_integer($set);
@@ -781,10 +778,10 @@ class x²func extends x²base { //x²f
 		} else {
 			$this->argus = $argus;
 		}
-				
+
 		$this->argus = x²sql::complode($this->argus);
-		
-		if ($this->argus === "(null)" || $this->argus==="('')")
+
+		if ($this->argus === "(null)" || $this->argus === "('')")
 			$this->argus = "()";
 
 		$this->alias = $alias ? " " . (new x²key($alias)) : "";
@@ -799,10 +796,15 @@ class x²token extends x²base { //x²t
 	public $escape = x²sql::esc_non;
 
 	public function __construct($value, $alias = "") {
+		if (!strlen($value))
+			throw new Exception(__CLASS__ . "->emptyToken not allowed");
 		if (preg_match("/\s|\n|\r|\t/", $value))
 			throw new Exception(__CLASS__ . "->value space is not allowed");
+
 		$value = (substr($value, 0, 1) == x²sql::tokenizer) ? substr($value, 1) : $value;
+
 		parent::__construct($value, $alias);
+
 		$this->display = x²sql::tokenizer . x²sql::escape($value, x²sql::esc_non)
 						. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 		;
@@ -827,9 +829,9 @@ class x²key extends x²base { //x²k
 	public function __construct($value, $alias = "") {
 
 		parent::__construct($value, $alias);
-				
+
 		$display = [];
-		
+
 		if (is_array($value)) {
 
 			foreach ($value as $i => &$_) {
@@ -841,22 +843,23 @@ class x²key extends x²base { //x²k
 				else
 					$display[] = "*";
 			}
-			$value = implode(".", $display) ;
+			$value = implode(".", $display);
 
-		    $this->alias = @$this->alias  ?  " ". x²sql::escape($this->alias, x²sql::esc_key)  : "";
+			$this->alias = @$this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "";
 			$this->display_no_alias = $value;
-			$this->display = $this->display_no_alias.$this->alias;	
+			$this->display = $this->display_no_alias . $this->alias;
 		}
 		else if ($value == null) {
 			$this->display = "";
 		} else {
 			$value = trim($value); //keinen Dunst , wo space herkommt ... wtf
-			if (preg_match_all("/\s|\n|\r|\t/", $value,$m)){
-			throw new Exception(__CLASS__ . "->value space is not allowed");}
-			
-			$this->alias = @$this->alias ?  " ". x²sql::escape($this->alias, x²sql::esc_key)  : "";
+			if (preg_match_all("/\s|\n|\r|\t/", $value, $m)) {
+				throw new Exception(__CLASS__ . "->value space is not allowed");
+			}
+
+			$this->alias = @$this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "";
 			$this->display_no_alias = x²sql::escape($value, x²sql::esc_key);
-			$this->display = $this->display_no_alias.$this->alias;	
+			$this->display = $this->display_no_alias . $this->alias;
 		}
 	}
 
@@ -989,5 +992,4 @@ class x²math extends x²base { //x²m
  * last_append value
  * so kann ich hier über last_append den puren wert kriegen anstatt das commando-fragment.
  */
-
 ?>
