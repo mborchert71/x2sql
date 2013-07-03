@@ -34,7 +34,7 @@ if(!defined("k")){
 	define ("k", x²sql::esc_key);
 	define ("s", x²sql::esc_string);
 	define ("n", x²sql::esc_num);
-	define ("d", x²sql::char_list_delimiter);
+	define ("d", x²sql::delimiter);
 	
 	}
 
@@ -458,8 +458,8 @@ class _x²sql extends UnitTestCase {
 		$this->test->reset();
 		$this->assertEqual("$word 14", $this->test->$call("14")->last_append);
 		$this->assertEqual("$word 14", $this->test->$call(14)->last_append);
-		$this->assertEqual("$word 14", $this->test->$call(13.5)->last_append);
-		$this->assertEqual("$word 14", $this->test->$call(new x²number(13.5))->last_append);
+		$this->assertEqual("$word 13", $this->test->$call(13.5)->last_append);
+		$this->assertEqual("$word 13", $this->test->$call(new x²number(13.5))->last_append);
 		$inst = null;
 		try {
 			$inst = $this->test->$call("2m3");
@@ -590,7 +590,7 @@ class _x²sql extends UnitTestCase {
 		$k = x²sql::esc_key;
 		$s = x²sql::esc_string;
 		$n = x²sql::esc_num;
-		$d = x²sql::char_list_delimiter;
+		$d = x²sql::delimiter;
 		$set = new stdClass;
 		$set->rt = "?";
 		$set->foo = "bar";

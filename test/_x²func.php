@@ -31,7 +31,7 @@ if(!defined("k")){
 	define ("k", x²sql::esc_key);
 	define ("s", x²sql::esc_string);
 	define ("n", x²sql::esc_num);
-	define ("d", x²sql::char_list_delimiter);
+	define ("d", x²sql::delimiter);
 	define ("t", x²sql::tokenizer);
 	}
 
