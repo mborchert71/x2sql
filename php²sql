@@ -1,5 +1,4 @@
 <?php
-
 /**
  * x²sql
  *
@@ -264,7 +263,7 @@ class x²sql {
 				return self::complode(new x²math($set->value), $cfg);
 				break;
 			default:
-				throw new Exception(__CLASS__ . "->implode unkown type");
+				throw new Exception(__CLASS__ . "->implode unkown type: ".print_r($set,true));
 				break;
 		}
 	}
@@ -884,7 +883,8 @@ class x²number extends x²base { //x²n
 	public $escape = x²sql::esc_non;
 
 	public function __construct($value, $alias = "") {
-		if (!is_numeric($value))
+		$chr = substr($value,0,1);
+		if (!is_numeric($value) && $chr !==x²sql::tokenizer && $chr!==x²sql::placeholder)
 			throw new Exception(__CLASS__ . "->value is no number");
 		parent::__construct($value, $alias);
 		$this->display = x²sql::escape($value, x²sql::esc_non)
