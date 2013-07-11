@@ -271,9 +271,9 @@ class _x²sql extends UnitTestCase {
 		$c = count($in);
 		while ($c--) {
 			$inst = $this->test->select($in[$c]);
-			$this->assertEqual($out[$c], $this->test->last_append, "%s fail-index:$c");
+			$this->assertEqual($out[$c],$this->test->last_word. $this->test->last_append, "%s fail-index:$c");
 		}
-		$this->assertEqual(3, $x::$bind_count, "bindcount,%s");
+		$this->assertEqual(3, $x->bind_count, "bindcount,%s");
 	}
 
 	/**
@@ -289,14 +289,12 @@ class _x²sql extends UnitTestCase {
 		$n = x²sql::esc_num;
 		$t = x²sql::tokenizer;
 		$in = array(
-			"?",
 			true, false,
 			234, 4e-1, 0x44,
 			456.325,
 			new x²bool(true),
 			new x²number(12),
 			"col",
-			":tok",
 			array("t1", "t2", "t3"),
 			new x²key("table", "alias"),
 			x²sql::query()->select()->from("t")->where(array(new x²key("x"), "<", 3))->alias("alias")
@@ -304,7 +302,6 @@ class _x²sql extends UnitTestCase {
 
 
 		$out = array(
-			"$word ?",
 			"$word {$k}1{$k}",
 			"$word {$k}0{$k}",
 			"$word {$k}234{$k}",
@@ -314,7 +311,6 @@ class _x²sql extends UnitTestCase {
 			"$word 1",
 			"$word 12",
 			"$word {$k}col{$k}",
-			"$word {$t}tok",
 			"$word {$k}t1{$k},{$k}t2{$k},{$k}t3{$k}",
 			"$word {$k}table{$k} {$k}alias{$k}",
 			"$word (select * from {$k}t{$k} where ({$k}x{$k} < {$n}3{$n})) {$k}alias{$k}"
@@ -325,24 +321,8 @@ class _x²sql extends UnitTestCase {
 		$c = count($in);
 		while ($c--) {
 			$inst = $this->test->$call($in[$c]);
-			$this->assertEqual($out[$c], $this->test->last_append);
+			$this->assertEqual($out[$c], $this->test->last_word.$this->test->last_append);
 		}
-		//expect fail
-		/*
-		$in = array(
-			new stdClass(),
-			new x²func("count",null, "*")
-		);
-		$c = count($in);
-		while ($c--) {
-			$e = null;
-			try {
-				$inst = $this->test->from($in[$c]);
-			} catch (Exception $e) {
-				
-			}
-			$this->assertIsA($e, "Exception", "%s input:$c =>" . $this->test->last_append);
-		}*/
 	}
 
 	/**
@@ -355,12 +335,12 @@ class _x²sql extends UnitTestCase {
 		$k = x²sql::esc_key;
 		$n = x²sql::esc_num;
 		$this->assertEqual(
-				"$word ({$k}x{$k} < {$n}3{$n})", $this->test->$call(array(new x²key("x"), "<", 3))->last_append, "%s");
+				" ({$k}x{$k} < {$n}3{$n})", $this->test->$call(array(new x²key("x"), "<", 3))->last_append, "%s");
 		$this->assertNotEqual(
-				"$word ({$k}x{$k} in (select * from {$k}table{$k}))", $this->test->$call(array(new x²key("x"), "in", x²sql::query()->select()->from("table")))->last_append, "%s");
+				" ({$k}x{$k} in (select * from {$k}table{$k}))", $this->test->$call(array(new x²key("x"), "in", x²sql::query()->select()->from("table")))->last_append, "%s");
 		$this->assertEqual(
-				"$word (({$k}x{$k} < {$n}3{$n}) and (1 <> {$n}3{$n}))", $this->test->$call(array(array(new x²key("x"), "<", 3), "and", array(true, "<>", 3)))->last_append, "%s");
-		$this->assertEqual("$word (({$k}table{$k}.{$k}schema_name{$k} = schema()) and ({$k}table_name{$k} = :table))",
+				" (({$k}x{$k} < {$n}3{$n}) and (1 <> {$n}3{$n}))", $this->test->$call(array(array(new x²key("x"), "<", 3), "and", array(true, "<>", 3)))->last_append, "%s");
+		$this->assertEqual(" (({$k}table{$k}.{$k}schema_name{$k} = schema()) and ({$k}table_name{$k} = :table))",
 			$this->test->$call( 
 										[ [ new x²key(["table","schema_name"]),"=",new x²func("schema")]
 										,"and",
@@ -431,7 +411,7 @@ class _x²sql extends UnitTestCase {
 		$c = count($in);
 		while ($c--) {
 			$this->test->group($in[$c]);
-			$this->assertEqual($out[$c], $this->test->last_append, "%s fail-index:$c");
+			$this->assertEqual($out[$c],$this->test->last_word. $this->test->last_append, "%s fail-index:$c");
 		}
 
 	}
@@ -444,9 +424,9 @@ class _x²sql extends UnitTestCase {
 			return;
 		$k = x²sql::esc_key;
 		$this->test->reset();
-		$this->assertEqual(" order by {$k}col{$k}", $this->test->order(new x²order("col"))->last_append);
-		$this->assertEqual(" order by {$k}col{$k} AsC", $this->test->order(new x²order("col","AsC"))->last_append);
-		$this->assertEqual(" order by {$k}col{$k} asc,{$k}col2{$k},{$k}col3{$k} desC", $this->test->order(array(new x²order("col","asc"),"col2",new x²order("col3","desC")))->last_append);
+		$this->assertEqual(" {$k}col{$k}", $this->test->order(new x²order("col"))->last_append);
+		$this->assertEqual(" {$k}col{$k} AsC", $this->test->order(new x²order("col","AsC"))->last_append);
+		$this->assertEqual(" {$k}col{$k} asc,{$k}col2{$k},{$k}col3{$k} desC", $this->test->order(array(new x²order("col","asc"),"col2",new x²order("col3","desC")))->last_append);
 	}
 
 	/**
@@ -456,10 +436,10 @@ class _x²sql extends UnitTestCase {
 		if (!$this->runTest(__FUNCTION__))
 			return;
 		$this->test->reset();
-		$this->assertEqual("$word 14", $this->test->$call("14")->last_append);
-		$this->assertEqual("$word 14", $this->test->$call(14)->last_append);
-		$this->assertEqual("$word 13", $this->test->$call(13.5)->last_append);
-		$this->assertEqual("$word 13", $this->test->$call(new x²number(13.5))->last_append);
+		$this->assertEqual("14", $this->test->$call("14")->last_append);
+		$this->assertEqual("14", $this->test->$call(14)->last_append);
+		$this->assertEqual("13", $this->test->$call(13.5)->last_append);
+		$this->assertEqual(" 13.5", $this->test->$call(new x²number(13.5))->last_append);
 		$inst = null;
 		try {
 			$inst = $this->test->$call("2m3");
@@ -504,12 +484,12 @@ class _x²sql extends UnitTestCase {
 			new x²string("id", "no-alias-must-be-set")
 		);
 		$out = array(
-			"({$k}col{$k})",
-			"(?)", "(:tok)",
-			"({$k}id{$k},{$k}name{$k},{$k}value{$k})",
-			"(?)",
-			"({$k}id{$k})",
-			"({$k}id{$k})"
+			" ({$k}col{$k})",
+			" (?)", " (:tok)",
+			" ({$k}id{$k},{$k}name{$k},{$k}value{$k})",
+			" (?)",
+			" ({$k}id{$k})",
+			" ({$k}id{$k})"
 		);
 		//expect pass
 		$this->assertEqual(count($in), count($out));
@@ -566,7 +546,7 @@ class _x²sql extends UnitTestCase {
 		$c = count($in);
 		while ($c--) {
 			$inst = $this->test->values($in[$c]);
-			$this->assertEqual($out[$c], $this->test->last_append, "index:$c,%s");
+			$this->assertEqual($out[$c], $this->test->last_word.$this->test->last_append, "index:$c,%s");
 		}
 	}
 
@@ -596,10 +576,10 @@ class _x²sql extends UnitTestCase {
 		$set->foo = "bar";
 		$set->peri = 1234;
 		$set->subq = x²sql::query()->select(new x²func("now"));
-		$expect = "{$k}rt{$k}=?{$d}{$k}foo{$k}={$s}bar{$s}{$d}{$k}peri{$k}={$n}1234{$n}{$d}{$k}subq{$k}=select now() ";
+		$expect = "set {$k}rt{$k}=?{$d}{$k}foo{$k}={$s}bar{$s}{$d}{$k}peri{$k}={$n}1234{$n}{$d}{$k}subq{$k}=select now()";
 		$this->test->set($set);
-		$this->assertEqual($this->test->last_append, $expect);
-	$this->assertTrue(x²sql::$prepare, $expect);
+		$this->assertEqual($this->test->last_word.$this->test->last_append, $expect);
+	$this->assertTrue($this->test->prepare, $expect);
 	}
 
 	/**
