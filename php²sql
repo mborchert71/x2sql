@@ -50,6 +50,7 @@ class x²sql {
 	const esc_non = "";
 	const esc_num = "";
 	const null_string = "null";
+	//
 	const transaction = "transaction";
 	const select = "select";
 	const show = "show";
@@ -57,7 +58,7 @@ class x²sql {
 	const delete = "delete";
 	const update = "update";
 	const create = "create";
-
+	const set = "set";
 	//const grant="grant";
 	//const alter = "alter";
 
@@ -152,7 +153,7 @@ class x²sql {
 			$this->command = implode("\n", $cfg->command);
 			return $this;
 		}
-		if (isset($cfg->select))
+		if (property_exists ($cfg, x²sql::select)) 
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->select($cfg->select)
@@ -167,34 +168,34 @@ class x²sql {
 											->fetch(@$cfg->fetch)
 											->fetch_type(@$cfg->fetch_type)
 											->alias(@$cfg->alias, $cfg);
-		if (isset($cfg->insert))
+		if (property_exists ($cfg, x²sql::insert))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->insert($cfg->insert)
 											->columns($cfg->columns)
 											->values($cfg->values);
-		if (isset($cfg->update))
+		if (property_exists ($cfg, x²sql::update))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->update($cfg->update)
 											->set($cfg->set)
 											->where($cfg->where);
-		if (isset($cfg->delete))
+		if (property_exists ($cfg, x²sql::delete))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->delete($cfg->delete)
 											->where($cfg->where);
-		if (isset($cfg->transaction))
+		if (property_exists ($cfg, x²sql::transaction))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->transaction($cfg->transaction);
-		if (isset($cfg->set))
+		if (property_exists ($cfg, x²sql::set))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->flag("command")
 											->set($cfg->set)
 											->unflag();
-		if (isset($cfg->create))
+		if (property_exists ($cfg, x²sql::create))
 			return $this->__name(@$cfg->__name)
 											->comment(@$cfg->comment)
 											->create($cfg->create)
