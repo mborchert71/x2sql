@@ -27,6 +27,7 @@
 class x²sql {
 	//outsource:
 
+	const version = 0.8;
 	const x²classlist = ",x²sql,x²sql,x²null,x²bool,x²number,x²string,x²func,x²token,x²place,x²key,x²order,x²operator,x²math,";
 	const x²sql = "x²sql";
 	const x²null = "x²null";
@@ -59,6 +60,7 @@ class x²sql {
 	const update = "update";
 	const create = "create";
 	const set = "set";
+
 	//const grant="grant";
 	//const alter = "alter";
 
@@ -122,7 +124,7 @@ class x²sql {
 	}
 
 	public function get_cfg_data(&$cfg) {
-		//todo: load file aswell...
+
 		if (is_string($cfg) && preg_match("/^[\{\(]+/", $cfg)) {
 			$jcfg = json_decode($cfg);
 			if (!is_array($jcfg) && !is_object($jcfg)) {
@@ -133,82 +135,78 @@ class x²sql {
 		return $cfg;
 	}
 
-	public function Sql(&$cfg) {
+	public function __construct($cfg = null) {
 
+		$this->bind = new stdClass;
 		$this->init_data = $cfg;
 		$cfg = $this->get_cfg_data($cfg);
 
-		if (isset($cfg->command)) {
-			if (is_string($cfg->command)) {
-				$_ = explode(" ", $cfg->command);
-				$this->command_type = array_shift($_);
-				unset($_);
-			} else {
-				$this->command_type = $cfg->command[0];
-				foreach ($cfg->command as &$c) {
-					if (is_object($c) || is_array($c))
-						$c = self::complode($c);
-				}
-			}
-			$this->command = implode("\n", $cfg->command);
-			return $this;
-		}
-		if (property_exists ($cfg, x²sql::select)) 
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->select($cfg->select)
-											->from(@$cfg->from)
-											->union(@$cfg->union)
-											->where(@$cfg->where)
-											->group(@$cfg->group)
-											->having(@$cfg->having)
-											->order(@$cfg->order)
-											->limit(@$cfg->limit)
-											->offset(@$cfg->offset)
-											->fetch(@$cfg->fetch)
-											->fetch_type(@$cfg->fetch_type)
-											->alias(@$cfg->alias, $cfg);
-		if (property_exists ($cfg, x²sql::insert))
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->insert($cfg->insert)
-											->columns($cfg->columns)
-											->values($cfg->values);
-		if (property_exists ($cfg, x²sql::update))
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->update($cfg->update)
-											->set($cfg->set)
-											->where($cfg->where);
-		if (property_exists ($cfg, x²sql::delete))
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->delete($cfg->delete)
-											->where($cfg->where);
-		if (property_exists ($cfg, x²sql::transaction))
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->transaction($cfg->transaction);
-		if (property_exists ($cfg, x²sql::set))
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->flag("command")
-											->set($cfg->set)
-											->unflag();
-		if (property_exists ($cfg, x²sql::create))
-			return $this->__name(@$cfg->__name)
-											->comment(@$cfg->comment)
-											->create($cfg->create)
-											->options(@$cfg->options)
-											->name($cfg->name)
-											->plock($cfg);
-	}
-
-	public function __construct($cfg = null) {
-		$this->bind = new stdClass;
-
 		if ($cfg) {
-			return $this->Sql($cfg);
+			if (@$cfg->command) {
+
+				if (is_string($cfg->command)) {
+					$_ = explode(" ", $cfg->command);
+					$this->command_type = array_shift($_);
+					unset($_);
+				} else {
+					$this->command_type = $cfg->command[0];
+					foreach ($cfg->command as &$c) {
+						if (is_object($c) || is_array($c))
+							$c = self::complode($c);
+					}
+				}
+				$this->command = implode("\n", $cfg->command);
+				return $this;
+			}
+			if (property_exists($cfg, x²sql::select))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->select($cfg->select)
+												->from(@$cfg->from)
+												->union(@$cfg->union)
+												->where(@$cfg->where)
+												->group(@$cfg->group)
+												->having(@$cfg->having)
+												->order(@$cfg->order)
+												->limit(@$cfg->limit)
+												->offset(@$cfg->offset)
+												->fetch(@$cfg->fetch)
+												->fetch_type(@$cfg->fetch_type)
+												->alias(@$cfg->alias, $cfg);
+			if (property_exists($cfg, x²sql::insert))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->insert($cfg->insert)
+												->columns($cfg->columns)
+												->values($cfg->values);
+			if (property_exists($cfg, x²sql::update))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->update($cfg->update)
+												->set($cfg->set)
+												->where($cfg->where);
+			if (property_exists($cfg, x²sql::delete))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->delete($cfg->delete)
+												->where($cfg->where);
+			if (property_exists($cfg, x²sql::transaction))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->transaction($cfg->transaction);
+			if (property_exists($cfg, x²sql::set))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->flag("command")
+												->set($cfg->set)
+												->unflag();
+			if (property_exists($cfg, x²sql::create))
+				return $this->__name(@$cfg->__name)
+												->comment(@$cfg->comment)
+												->create($cfg->create)
+												->options(@$cfg->options)
+												->name($cfg->name)
+												->plock($cfg);
 		}
 	}
 
@@ -310,7 +308,7 @@ class x²sql {
 				else
 					return $set->display;
 				break;
-			case self::x²string : if (!strlen($set->value)) {
+			case self::x²string : if (!@$set->value) {
 					return self::esc_string . self::esc_string;
 				}//no break;
 			case self::x²null:
@@ -321,7 +319,9 @@ class x²sql {
 					return self::escape($set->value, $cfg->escape)
 									. (@$cfg->no_alias ? "" : " " . self::escape($set->alias, self::esc_key) );
 				} elseif (@$cfg->no_alias) {
-					return (new $class($set->value, ""))->display;
+					if (isset($set->display_no_alias))
+						return $set->display_no_alias;
+					return (new $class($set->value))->display;
 				} else {
 					return $set->display;
 				}
@@ -383,6 +383,12 @@ class x²sql {
 	}
 
 	static public function escape($str, $esc = "", $operator = 0) {
+
+		if (is_object($str)) {
+			if(@$str->display) return $str->display;
+			return x²sql::complode($str, json_decode('{"escape":"' . $esc . '","operator":"' . $operator . '"}'));
+		}
+
 		if (is_string($str) && strlen($str) == 0)
 			return "";
 		if ($str === self::null_string || $str === null) {
@@ -401,8 +407,8 @@ class x²sql {
 			$rep = array("\\r", "\\n", "\\t");
 
 			if (trim($esc)) {
-				$ndl[] = "/" . $esc . "/";
-				$rep[] = $esc === self::esc_key ? $esc . $esc : "\\" . $esc;
+				$ndl= "/" . $esc . "/";
+				$rep = ($esc === self::esc_key ? $esc . $esc : "\\" . $esc);
 			}
 			return $esc . preg_replace($ndl, $rep, $str) . $esc;
 		} else {
@@ -438,6 +444,7 @@ class x²sql {
 			$cfg->word = __FUNCTION__;
 			$cfg->no_brackets = true;
 			$cfg->cast = "x²key";
+		$cfg->allow = array(self::x²string, self::x²key, self::x²token, __CLASS__);
 			$set = self::complode($set, $cfg);
 		}
 		$this->command.= $this->last_word = __FUNCTION__;
@@ -832,21 +839,19 @@ class x²token extends x²base { //x²t
 
 	public $escape = x²sql::esc_non;
 	public $name;
-	
+
 	public function __construct($value, $alias = "") {//cfg
-		
 		//datatype, required, bind , default    AFTER  handlerMonster is lysed.
 		//base to embed cqn into ²sql.
-
 		if (!strlen($value))
 			throw new Exception(__CLASS__ . "->emptyToken not allowed");
 		if (preg_match("/\s|\n|\r|\t/", $value))
 			throw new Exception(__CLASS__ . "->value space is not allowed");
 
 		$value = (substr($value, 0, 1) == x²sql::tokenizer) ? substr($value, 1) : $value;
-		
+
 		$this->name = $value;
-		
+
 		parent::__construct($value, $alias);
 
 		$this->display = x²sql::tokenizer . x²sql::escape($value, x²sql::esc_non)
@@ -861,7 +866,7 @@ class x²string extends x²base { //x²s
 	public function __construct($value, $alias = "") {
 		parent::__construct($value, $alias);
 		$this->display = x²sql::escape($value, x²sql::esc_string)
-						. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
+						. (@$this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
 	}
 
 }
@@ -896,7 +901,7 @@ class x²key extends x²base { //x²k
 		else if ($value == null) {
 			$this->display = "";
 		} else {
-			$value = trim($value); 
+			$value = trim($value);
 			$m = null;
 			if (preg_match_all("/\s|\n|\r|\t/", $value, $m)) {
 				throw new Exception(__CLASS__ . "->value space is not allowed");
@@ -918,8 +923,10 @@ class x²bool extends x²base { //x²b
 		if (!is_bool($value) && !preg_match("/true|false|1|0/i", $value)) // localized ...
 			throw new Exception(__CLASS__ . "->value is no boolean");
 		parent::__construct($value, $alias);
-		$this->display = ($value ? "1" : "0")
-						. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
+
+		$this->alias = @$this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "";
+		$this->display_no_alias = $value;
+		$this->display = $this->display_no_alias . $this->alias;
 	}
 
 }
@@ -933,9 +940,10 @@ class x²number extends x²base { //x²n
 		if (!is_numeric($value) && $chr !== x²sql::tokenizer && $chr !== x²sql::placeholder)
 			throw new Exception(__CLASS__ . "->value is no number");
 		parent::__construct($value, $alias);
-		$this->display = x²sql::escape($value, x²sql::esc_non)
-						. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
-		;
+
+		$this->alias = @$this->alias ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "";
+		$this->display_no_alias = $value;
+		$this->display = $this->display_no_alias . $this->alias;
 	}
 
 }
@@ -973,7 +981,7 @@ class x²order extends x²base { //x²s
 		if ("asc" != strtolower($direction) && "desc" != strtolower($direction) && $direction !== "")
 			$direction = "asc";
 		parent::__construct($value, $direction);
-		if (is_a($value,x²sql::x²key) || (is_object($value) && isset($value->value))) {
+		if (is_a($value, x²sql::x²key) || (is_object($value) && isset($value->value))) {
 			$this->value = $value->value;
 		}
 		$this->display = x²sql::escape($this->value, x²sql::esc_key)

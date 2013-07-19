@@ -270,6 +270,7 @@ class _x²sql extends UnitTestCase {
 		$this->assertEqual(count($in), count($out));
 		$c = count($in);
 		while ($c--) {
+			
 			$inst = $this->test->select($in[$c]);
 			$this->assertEqual($out[$c],$this->test->last_word. $this->test->last_append, "%s fail-index:$c");
 		}
