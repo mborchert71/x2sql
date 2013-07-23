@@ -3,23 +3,17 @@
 /**
  * x²sql
  *
- * An open source SQL-generator-class.
+ * SQL-generator-class (before i got to know ANTLR)
  * Inspired by the database-driver in Code-igniter http://ellislab.com/codeigniter.
- *   if (get_magic_quotes_gpc()) {        $value = stripslashes($value);    }
  * 
- * x²func redo ... text to display .. funcname to x²key alias to x²key
- * 2 ways . 1.standalone strictmode . every argument explicit or string escaped if not number
- *          2.relaxed mode lazy ... oder in  den x²s die ganzen kreuzauflösungen schon vornehmen ...
- *  dürfte auch complode um einiges schlanker machen ...  oh man seit ? monaten ... langsam hängt mir das wider trotz pausen zum hals raus ...
- *  ja ich weiss immer geschoben .. func war zuerst und dann x²base und nicht angepasst ... weil noch so viel zu tun war, was wichtiger war...
- *  immer wieder die selben fallen ... oder hindernisse...
  * 
  * @package		x²sql
+ * @uses            PDO
  * @author		mborchert
- * @copyright           Copyright (c) 2013.
- * @license		http://creativecommons.org/licenses/by/3.0/deed.de
- * @link		http://get-resource.net/app/php/x²sql
- * @since		Version 1.0
+ * @copyright    Copyright (c) 2013.
+ * @license		http://www.gnu.org/licenses/gpl-3.0
+ * @link		    http://x²sql.get-resource.net
+ * @since		    Version 1.0
  * @todo: join
  * @todo: support special settings : distinct, etc.
  * @todo: config_setting_options for complode : delimiter,no_brackets,no_alias,cast,escape,allow,array_position
@@ -86,6 +80,9 @@ class x²sql {
 	public $delimiter = ",";
 	public $bracket_open = "(";
 	public $bracket_close = ")";
+
+	public static $string_escape_char="\\";
+	public static $key_escape_char="`";
 	///outsource
 
 	private $flag;
@@ -251,11 +248,13 @@ class x²sql {
 
 	static public function _stdclass(&$set, &$cfg) {
 		switch (@$set->type) {
+			case self::x²token :
+				return self::complode(new x²token($set->key, @$set->alias,@$set->value,@$set->required,@$set->default), $cfg);
+				break;
 			case self::x²null:
 			case self::x²bool :
 			case self::x²number :
 			case self::x²place :
-			case self::x²token :
 			case self::x²string :
 			case self::x²key :
 				$class = $set->type;
@@ -297,11 +296,11 @@ class x²sql {
 				}
 				$cfg->x²instance->prepare = true;
 				$counter = $cfg->x²instance->bind_count++;
-				$cfg->x²instance->bind->$counter = new stdClass();
-				$cfg->x²instance->bind->$counter->bind = "Param";
-				$cfg->x²instance->bind->$counter->key = $class == self::x²token ? $set->value : self::placeholder;
-				$cfg->x²instance->bind->$counter->type = PDO::PARAM_STR;
+
+				$cfg->x²instance->bind->$counter = ( $class == self::x²token ? clone $set : new x²token(self::placeholder));
+				$cfg->x²instance->bind->$counter->display = self::null_string;
 				$cfg->x²instance->bind->$counter->value = self::null_string;
+
 				if (@$cfg->no_alias) {
 					return $class == self::x²token ? self::escape(self::tokenizer . $set->value, "") : self::escape($set->value, "");
 				}
@@ -385,7 +384,8 @@ class x²sql {
 	static public function escape($str, $esc = "", $operator = 0) {
 
 		if (is_object($str)) {
-			if(@$str->display) return $str->display;
+			if (@$str->display)
+				return $str->display;
 			return x²sql::complode($str, json_decode('{"escape":"' . $esc . '","operator":"' . $operator . '"}'));
 		}
 
@@ -407,8 +407,8 @@ class x²sql {
 			$rep = array("\\r", "\\n", "\\t");
 
 			if (trim($esc)) {
-				$ndl= "/" . $esc . "/";
-				$rep = ($esc === self::esc_key ? $esc . $esc : "\\" . $esc);
+				$ndl[] = "/" . $esc . "/";
+				$rep[] = ($esc === self::esc_key ? self::$key_escape_char. $esc : self::$string_escape_char. $esc);
 			}
 			return $esc . preg_replace($ndl, $rep, $str) . $esc;
 		} else {
@@ -444,7 +444,7 @@ class x²sql {
 			$cfg->word = __FUNCTION__;
 			$cfg->no_brackets = true;
 			$cfg->cast = "x²key";
-		$cfg->allow = array(self::x²string, self::x²key, self::x²token, __CLASS__);
+			$cfg->allow = array(self::x²string, self::x²key, self::x²token, __CLASS__);
 			$set = self::complode($set, $cfg);
 		}
 		$this->command.= $this->last_word = __FUNCTION__;
@@ -835,28 +835,37 @@ class x²func extends x²base { //x²f
 
 }
 
-class x²token extends x²base { //x²t
-
+class x²token { //x²t
+	
+	public $alias;
 	public $escape = x²sql::esc_non;
-	public $name;
+	public $key;
+	public $default;
+	public $required = false;
+	public $datatype = \PDO::PARAM_STR;
+	public $bind = "Param"; //Value,[Column
 
-	public function __construct($value, $alias = "") {//cfg
-		//datatype, required, bind , default    AFTER  handlerMonster is lysed.
-		//base to embed cqn into ²sql.
-		if (!strlen($value))
+	public function __construct($key, $alias = "", $value = null, $required = false, $default = null) {
+
+		if (!strlen($key)) {
 			throw new Exception(__CLASS__ . "->emptyToken not allowed");
-		if (preg_match("/\s|\n|\r|\t/", $value))
+		}
+		if (preg_match("/\s|\n|\r|\t/", $key)) {
 			throw new Exception(__CLASS__ . "->value space is not allowed");
+		}
+		if ($required && !$value && $default == null) {
+			throw new Exception("token is not optional: $key");
+		}
+		if ($required && !$value) {
+			$value = $default;
+		}
 
-		$value = (substr($value, 0, 1) == x²sql::tokenizer) ? substr($value, 1) : $value;
-
-		$this->name = $value;
-
-		parent::__construct($value, $alias);
-
-		$this->display = x²sql::tokenizer . x²sql::escape($value, x²sql::esc_non)
+		$this->required = $required;
+		$this->default = $default;
+		$this->value = $value;
+		$this->key = (substr($key, 0, 1) == x²sql::tokenizer) ? substr($key, 1) : $key;
+		$this->display = x²sql::tokenizer . x²sql::escape($key, x²sql::esc_non)
 						. (strlen($this->alias) ? " " . x²sql::escape($this->alias, x²sql::esc_key) : "");
-		;
 	}
 
 }
